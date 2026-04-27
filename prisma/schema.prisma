@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user") // "admin" | "user"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settings {
+  id           String  @id @default("global")
+  hoursDay     Float   @default(7)
+  hoursMonth   Float   @default(160)
+  insurance    Float   @default(0.2)
+  kStandard    Float   @default(1.0)
+  kMedium      Float   @default(1.25)
+  kComplex     Float   @default(1.5)
+  kSenior      Float   @default(0.8)
+  kMid         Float   @default(1.0)
+  kJunior      Float   @default(1.2)
+}
+
+model Object {
+  id          String     @id @default(cuid())
+  code        String?    @unique
+  name        String
+  type        String     // "Жилой" | "Коммерческий"
+  complexity  String     // "Стандартный" | "Средней сложности" | "Сложный"
+  area        Float      @default(0)
+  roomsMain   Int        @default(0)
+  roomsAux    Int        @default(0)
+  roomsTech   Int        @default(0)
+  roomsIii    Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  contracts   Contract[]
+}
+
+model Employee {
+  id        String   @id @default(cuid())
+  name      String
+  role      String   // "Тимлид" | "Дизайнер" | "Визуализатор" | "Проектировщик" | "Архитектор" | "Комплектатор"
+  type      String   // "Ведущий специалист" | "Специалист" | "Младший специалист"
+  salary    Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contract {
+  id       String         @id @default(cuid())
+  name     String
+  objectId String
+  object   Object         @relation(fields: [objectId], references: [id], onDelete: Cascade)
+  service  String         // "ДПИ" | "ЭАП" | "АЛР" | "Авторский надзор"
+  status   String         @default("active") // "active" | "done"
+  team     ContractTeam[]
+  stages   ContractStage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ContractTeam {
+  id         String   @id @default(cuid())
+  contractId String
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  role       String
+  employeeId String
+}
+
+model ContractStage {
+  id         String   @id @default(cuid())
+  contractId String
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  stage      String   // "Этап 1" | "Этап 2" | "Этап 3" | "Этап 4"
+  startDate  DateTime?
+  days       Int      @default(20)
+  order      Int      @default(0)
+}
+
+model Norm {
+  id          String  @id @default(cuid())
+  service     String
+  stage       String
+  artifact    String
+  task        String
+  role        String
+  base        String  @default("Нет")
+  hResidential Float  @default(0)
+  hCommercial  Float  @default(0)
+  order       Int     @default(0)
+}

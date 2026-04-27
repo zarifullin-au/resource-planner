@@ -1,0 +1,23 @@
+# Spec for <feature-name>
+
+figma_component (if used): <figma-component-name>
+
+## Summary
+...
+
+## Functional Requirements
+...
+
+## Figma Design Reference (only if referenced)
+- File: ...
+- Component name:
+- Key visual points: ...
+
+## Possible Edge Cases
+...
+
+## Acceptance Criteria
+...
+
+## Open Questions
+...

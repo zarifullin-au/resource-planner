@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//usr/local/**)",
+      "Read(//Users/user/.nvm/versions/**)",
+      "Bash(npx prisma *)",
+      "Bash(psql -d resource_planner -c 'SELECT code, COUNT\\(*\\) FROM \"Object\" WHERE code IS NOT NULL GROUP BY code HAVING COUNT\\(*\\) > 1;')",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npm run *)",
+      "Bash(git *)"
+    ]
+  }
+}
