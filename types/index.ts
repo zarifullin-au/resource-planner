@@ -74,6 +74,7 @@ export interface AppSettings {
   kSenior: number
   kMid: number
   kJunior: number
+  customHolidays: string[]
 }
 
 export interface MonthData {

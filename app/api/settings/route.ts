@@ -4,6 +4,15 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { num } from '@/lib/coerce'
 
+function parseHolidays(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter(d => typeof d === 'string') : []
+  } catch {
+    return []
+  }
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -12,13 +21,16 @@ export async function GET() {
     update: {},
     create: { id: 'global' },
   })
-  return NextResponse.json(settings)
+  return NextResponse.json({ ...settings, customHolidays: parseHolidays(settings.customHolidays) })
 }
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
+  const customHolidays = Array.isArray(body.customHolidays)
+    ? body.customHolidays.filter((d: unknown) => typeof d === 'string')
+    : []
   const settings = await prisma.settings.upsert({
     where: { id: 'global' },
     update: {
@@ -31,8 +43,9 @@ export async function PUT(req: NextRequest) {
       kSenior: num(body.kSenior, 0.8),
       kMid: num(body.kMid, 1.0),
       kJunior: num(body.kJunior, 1.2),
+      customHolidays: JSON.stringify(customHolidays),
     },
     create: { id: 'global' },
   })
-  return NextResponse.json(settings)
+  return NextResponse.json({ ...settings, customHolidays: parseHolidays(settings.customHolidays) })
 }

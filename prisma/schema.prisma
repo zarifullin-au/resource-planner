@@ -18,16 +18,17 @@ model User {
 }
 
 model Settings {
-  id           String  @id @default("global")
-  hoursDay     Float   @default(7)
-  hoursMonth   Float   @default(160)
-  insurance    Float   @default(0.2)
-  kStandard    Float   @default(1.0)
-  kMedium      Float   @default(1.25)
-  kComplex     Float   @default(1.5)
-  kSenior      Float   @default(0.8)
-  kMid         Float   @default(1.0)
-  kJunior      Float   @default(1.2)
+  id             String  @id @default("global")
+  hoursDay       Float   @default(7)
+  hoursMonth     Float   @default(160)
+  insurance      Float   @default(0.2)
+  kStandard      Float   @default(1.0)
+  kMedium        Float   @default(1.25)
+  kComplex       Float   @default(1.5)
+  kSenior        Float   @default(0.8)
+  kMid           Float   @default(1.0)
+  kJunior        Float   @default(1.2)
+  customHolidays String  @default("[]")
 }
 
 model Object {

@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   hoursDay: 7, hoursMonth: 160, insurance: 0.2,
   kStandard: 1.0, kMedium: 1.25, kComplex: 1.5,
   kSenior: 0.8, kMid: 1.0, kJunior: 1.2,
+  customHolidays: [],
 }
 
 export function useAppData(): AppData {

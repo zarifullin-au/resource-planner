@@ -1,4 +1,5 @@
 import type { AppSettings, Contract, Employee, MonthData, Norm, LoadResult, ProjectObject } from '@/types'
+import { buildHolidaySet, toIsoDate } from '@/lib/holidays'
 
 export const ROLE_COLORS: Record<string, string> = {
   'Тимлид': '#4af0b4',
@@ -29,21 +30,28 @@ export function getTypeK(type: string, settings: AppSettings): number {
   return settings.kMid
 }
 
-export function addWorkingDays(date: Date, days: number): Date {
+function isWorkingDay(d: Date, holidays?: Set<string>): boolean {
+  const dow = d.getDay()
+  if (dow === 0 || dow === 6) return false
+  if (holidays && holidays.has(toIsoDate(d))) return false
+  return true
+}
+
+export function addWorkingDays(date: Date, days: number, holidays?: Set<string>): Date {
   const d = new Date(date)
   let added = 0
   while (added < days) {
     d.setDate(d.getDate() + 1)
-    if (d.getDay() !== 0 && d.getDay() !== 6) added++
+    if (isWorkingDay(d, holidays)) added++
   }
   return d
 }
 
-export function countWorkingDays(start: Date, end: Date): number {
+export function countWorkingDays(start: Date, end: Date, holidays?: Set<string>): number {
   let count = 0
   const d = new Date(start)
   while (d <= end) {
-    if (d.getDay() !== 0 && d.getDay() !== 6) count++
+    if (isWorkingDay(d, holidays)) count++
     d.setDate(d.getDate() + 1)
   }
   return count
@@ -118,6 +126,10 @@ export function calcLoad(
   const months = getMonths(18, offset - 2)
   const result: LoadResult = {}
 
+  const fromYear = months[0].year - 1
+  const toYear = months[months.length - 1].year + 1
+  const holidays = buildHolidaySet(fromYear, toYear, settings.customHolidays ?? [])
+
   for (const emp of employees) {
     result[emp.id] = {}
     for (const m of months) {
@@ -136,7 +148,7 @@ export function calcLoad(
 
       const stageHours = calcStageHours(contract, si, object, employees, norms, settings)
       const start = new Date(stageInfo.startDate)
-      const end = addWorkingDays(start, stageInfo.days || 20)
+      const end = addWorkingDays(start, stageInfo.days || 20, holidays)
 
       for (const [role, hours] of Object.entries(stageHours)) {
         const teamEntry = contract.team.find(t => t.role === role)
@@ -150,8 +162,8 @@ export function calcLoad(
           const overlapStart = start > mStart ? start : mStart
           const overlapEnd = end < mEnd ? end : mEnd
           if (overlapStart > overlapEnd) continue
-          const overlapWD = countWorkingDays(overlapStart, overlapEnd)
-          const totalWD = countWorkingDays(start, end) || 1
+          const overlapWD = countWorkingDays(overlapStart, overlapEnd, holidays)
+          const totalWD = countWorkingDays(start, end, holidays) || 1
           const fraction = overlapWD / totalWD
           result[empId][m.key] = (result[empId][m.key] || 0) + hours * fraction
         }

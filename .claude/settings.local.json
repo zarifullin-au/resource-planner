@@ -7,7 +7,9 @@
       "Bash(psql -d resource_planner -c 'SELECT code, COUNT\\(*\\) FROM \"Object\" WHERE code IS NOT NULL GROUP BY code HAVING COUNT\\(*\\) > 1;')",
       "Bash(pkill -f \"next dev\")",
       "Bash(npm run *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(npx tsc *)"
     ]
   }
 }
