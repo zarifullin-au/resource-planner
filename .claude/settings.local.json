@@ -9,7 +9,8 @@
       "Bash(npm run *)",
       "Bash(git *)",
       "Bash(grep -E \"\\\\.ts$\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(curl *)"
     ]
   }
 }

@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppData } from '@/lib/useAppData'
 import { Modal, Confirm, PageHeader, FormGroup, Tag } from '@/components/ui'
 import { ROLES, SERVICES, STAGES, calcStageHours, ROLE_COLORS } from '@/lib/calc'
 import { fetchJson, showError, confirmDuplicateName } from '@/lib/api'
 import type { Contract, ContractStage } from '@/types'
+import type { ContractDraftPayload } from '@/lib/slotFinder'
 
 function emptyContract() {
   const today = new Date().toISOString().slice(0, 10)
@@ -23,6 +24,61 @@ export default function ContractsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [hoursId, setHoursId] = useState<{ contractId: string; stageIdx: number } | null>(null)
   const [saving, setSaving] = useState(false)
+  const draftConsumed = useRef(false)
+
+  // Pre-fill from sessionStorage when arriving from /timeline slot finder.
+  useEffect(() => {
+    if (loading || draftConsumed.current) return
+    const raw = typeof window !== 'undefined' ? sessionStorage.getItem('contractDraft') : null
+    if (!raw) return
+    draftConsumed.current = true
+    sessionStorage.removeItem('contractDraft')
+
+    let draft: ContractDraftPayload
+    try {
+      draft = JSON.parse(raw) as ContractDraftPayload
+    } catch {
+      return
+    }
+
+    const applyDraft = (objectId: string) => {
+      setForm({
+        name: draft.name,
+        objectId,
+        service: draft.service,
+        status: 'active',
+        team: Object.fromEntries(draft.team.map(t => [t.role, t.employeeId])),
+        stages: STAGES.map(stageName => {
+          const found = draft.stages.find(s => s.stage === stageName)
+          return {
+            stage: stageName,
+            startDate: found?.startDate ?? new Date().toISOString().slice(0, 10),
+            days: found?.days ?? 20,
+          }
+        }),
+      })
+      setEditId(null)
+      setModalOpen(true)
+    }
+
+    if (draft.objectId) {
+      applyDraft(draft.objectId)
+    } else if (draft.objectDraft) {
+      fetchJson<{ id: string }>('/api/objects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draft.objectDraft),
+      })
+        .then(obj => {
+          refresh()
+          applyDraft(obj.id)
+        })
+        .catch(e => {
+          showError(e)
+          if (objects[0]) applyDraft(objects[0].id)
+        })
+    }
+  }, [loading, objects, refresh])
 
   function openAdd() {
     if (!objects.length) { alert('Сначала добавьте объект'); return }

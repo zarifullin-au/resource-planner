@@ -1,9 +1,11 @@
 'use client'
-import { useState, useMemo, Fragment } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useAppData } from '@/lib/useAppData'
-import { calcLoad, getMonths, addWorkingDays, countWorkingDays, ROLE_COLORS } from '@/lib/calc'
+import { calcLoad, getMonths, addWorkingDays, countWorkingDays } from '@/lib/calc'
+import { ROLE_COLORS } from '@/lib/calc'
 import { buildHolidaySet } from '@/lib/holidays'
-import { PeriodNav, FilterButtons, Modal } from '@/components/ui'
+import { PeriodNav, Modal } from '@/components/ui'
+import { ContractSlotFinder, type SlotDraftPreview } from '@/components/timeline/ContractSlotFinder'
 import type { Contract, ContractStage, ProjectObject } from '@/types'
 
 interface StageBar {
@@ -15,12 +17,14 @@ interface StageBar {
   widthPct: number
   clippedLeft: boolean
   color: string
+  isDraft?: boolean
 }
 
 interface ContractRow {
   contract: Contract
   object: ProjectObject | null
   bars: StageBar[]
+  isDraft?: boolean
 }
 
 interface SelectedStage {
@@ -36,28 +40,38 @@ interface SelectedStage {
 export default function TimelinePage() {
   const { objects, employees, contracts, norms, settings, loading } = useAppData()
   const [offset, setOffset] = useState(0)
-  const [empFilter, setEmpFilter] = useState('all')
   const [selected, setSelected] = useState<SelectedStage | null>(null)
+  const [draft, setDraft] = useState<SlotDraftPreview | null>(null)
 
   const months = useMemo(() => getMonths(6, offset), [offset])
+
+  const effectiveContracts = useMemo<Contract[]>(
+    () => draft ? [...contracts, draft.contract] : contracts,
+    [contracts, draft],
+  )
+  const effectiveObjects = useMemo<ProjectObject[]>(
+    () => draft && draft.object.id === '__draft__' ? [...objects, draft.object] : objects,
+    [objects, draft],
+  )
+
   const load = useMemo(
-    () => calcLoad(contracts, objects, employees, norms, settings, offset),
-    [contracts, objects, employees, norms, settings, offset]
+    () => calcLoad(effectiveContracts, effectiveObjects, employees, norms, settings, offset),
+    [effectiveContracts, effectiveObjects, employees, norms, settings, offset],
   )
 
   const windowStart = useMemo(
     () => new Date(months[0].year, months[0].month, 1),
-    [months]
+    [months],
   )
   const windowEnd = useMemo(
     () => new Date(months[months.length - 1].year, months[months.length - 1].month + 1, 0, 23, 59, 59, 999),
-    [months]
+    [months],
   )
   const windowMs = windowEnd.getTime() - windowStart.getTime()
 
   const holidays = useMemo(
     () => buildHolidaySet(windowStart.getFullYear() - 1, windowEnd.getFullYear() + 1, settings.customHolidays ?? []),
-    [windowStart, windowEnd, settings.customHolidays]
+    [windowStart, windowEnd, settings.customHolidays],
   )
 
   const today = new Date()
@@ -65,9 +79,15 @@ export default function TimelinePage() {
 
   const stageRows = useMemo<ContractRow[]>(() => {
     const rows: ContractRow[] = []
-    for (const c of contracts) {
-      if (c.status === 'done') continue
-      const obj = objects.find(o => o.id === c.objectId) || null
+    const allContracts: { c: Contract; isDraft: boolean }[] = [
+      ...contracts.filter(c => c.status !== 'done').map(c => ({ c, isDraft: false })),
+    ]
+    if (draft) allContracts.push({ c: draft.contract, isDraft: true })
+
+    for (const { c, isDraft } of allContracts) {
+      const obj = isDraft
+        ? draft!.object
+        : (objects.find(o => o.id === c.objectId) || null)
       const bars: StageBar[] = []
       ;(c.stages || []).forEach((s, idx) => {
         if (!s.startDate) return
@@ -88,42 +108,14 @@ export default function TimelinePage() {
         else if (monthsUntilEnd === 1) color = '#f59a4a'
         else if (monthsUntilEnd <= 3) color = 'var(--accent3)'
         else color = 'var(--text3)'
+        if (isDraft) color = 'var(--accent2)'
 
-        bars.push({ stage: s, stageIdx: idx, start, end, leftPct, widthPct, clippedLeft, color })
+        bars.push({ stage: s, stageIdx: idx, start, end, leftPct, widthPct, clippedLeft, color, isDraft })
       })
-      if (bars.length > 0) rows.push({ contract: c, object: obj, bars })
+      if (bars.length > 0) rows.push({ contract: c, object: obj, bars, isDraft })
     }
     return rows
-  }, [contracts, objects, holidays, windowStart, windowEnd, windowMs, todayMonthIdx])
-
-  const maxH = settings.hoursMonth
-  const activeRoles = useMemo(
-    () => Array.from(new Set(employees.map(e => e.role))),
-    [employees]
-  )
-
-  const roleFilterOptions = [
-    { value: 'all', label: 'Все' },
-    ...activeRoles.map(r => ({ value: r, label: r, color: ROLE_COLORS[r] })),
-  ]
-
-  const teamSummary = useMemo(() => {
-    return months.map(m => {
-      let minFreePct = 100
-      let hasData = false
-      for (const role of activeRoles) {
-        const roleEmps = employees.filter(e => e.role === role)
-        if (roleEmps.length === 0) continue
-        hasData = true
-        const totalCap = roleEmps.length * maxH
-        const totalLoad = roleEmps.reduce((sum, e) => sum + (load[e.id]?.[m.key] || 0), 0)
-        const free = Math.max(0, totalCap - totalLoad)
-        const pct = totalCap > 0 ? (free / totalCap * 100) : 0
-        if (pct < minFreePct) minFreePct = pct
-      }
-      return hasData ? Math.round(minFreePct) : 0
-    })
-  }, [months, activeRoles, employees, load, maxH])
+  }, [contracts, objects, draft, holidays, windowStart, windowEnd, windowMs, todayMonthIdx])
 
   function openStage(row: ContractRow, bar: StageBar) {
     const wd = countWorkingDays(bar.start, bar.end, holidays)
@@ -138,6 +130,8 @@ export default function TimelinePage() {
     })
   }
 
+  const handleDraftChange = useCallback((d: SlotDraftPreview | null) => setDraft(d), [])
+
   if (loading) return (
     <div className="flex items-center justify-center h-64 text-xs" style={{ color: 'var(--text3)' }}>
       Загрузка данных...
@@ -149,12 +143,12 @@ export default function TimelinePage() {
       <div className="flex items-start justify-between gap-4 mb-2">
         <div>
           <div className="font-head text-lg font-semibold mb-1">Дашборд</div>
-          <div className="text-xs" style={{ color: 'var(--text2)' }}>Сроки этапов и свободная ёмкость команды</div>
+          <div className="text-xs" style={{ color: 'var(--text2)' }}>Сроки этапов и подбор слота для нового договора</div>
         </div>
         <PeriodNav offset={offset} months={months} onShift={d => setOffset(o => o + d)} onReset={() => setOffset(0)} />
       </div>
 
-      {/* Block 1 — Stages timeline */}
+      {/* Block 1 — Stages timeline (with optional draft preview) */}
       <div className="card mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="font-head font-semibold tracking-wide text-xs" style={{ color: 'var(--text2)' }}>
@@ -165,6 +159,7 @@ export default function TimelinePage() {
             <LegendDot color="#f59a4a" label="через 1 мес" />
             <LegendDot color="var(--accent3)" label="через 2–3 мес" />
             <LegendDot color="var(--text3)" label="позже" />
+            {draft && <LegendDot color="var(--accent2)" label="черновик" dashed />}
           </div>
         </div>
 
@@ -184,10 +179,10 @@ export default function TimelinePage() {
           </div>
         ) : (
           stageRows.map(row => (
-            <div key={row.contract.id} className="grid items-center mb-1.5" style={{ gridTemplateColumns: '200px 1fr' }}>
+            <div key={`${row.contract.id}-${row.isDraft ? 'd' : 'r'}`} className="grid items-center mb-1.5" style={{ gridTemplateColumns: '200px 1fr' }}>
               <div className="pr-3 truncate">
-                <div className="text-[12px] font-medium truncate" style={{ color: 'var(--text)' }}>
-                  {row.object?.name || row.contract.name}
+                <div className="text-[12px] font-medium truncate" style={{ color: row.isDraft ? 'var(--accent2)' : 'var(--text)' }}>
+                  {row.isDraft ? '✦ Черновик: ' : ''}{row.object?.name || row.contract.name}
                 </div>
                 <div className="text-[10px] mt-0.5" style={{ color: 'var(--accent2)' }}>{row.contract.service}</div>
               </div>
@@ -209,22 +204,24 @@ export default function TimelinePage() {
                   <button
                     key={b.stageIdx}
                     type="button"
-                    onClick={() => openStage(row, b)}
-                    title={`${b.stage.stage}: ${formatDate(b.start)} — ${formatDate(b.end)}`}
+                    onClick={() => row.isDraft ? null : openStage(row, b)}
+                    title={`${b.stage.stage}: ${formatDate(b.start)} — ${formatDate(b.end)}${b.isDraft ? ' (черновик)' : ''}`}
                     className="absolute flex items-center px-1.5 transition-all hover:brightness-125"
                     style={{
                       left: `${b.leftPct}%`,
                       width: `${b.widthPct}%`,
                       top: 4,
                       height: 22,
-                      background: b.color,
+                      background: b.isDraft ? 'transparent' : b.color,
+                      border: b.isDraft ? '2px dashed var(--accent2)' : 'none',
+                      opacity: b.isDraft ? 0.85 : 1,
                       borderRadius: b.clippedLeft ? '0 4px 4px 0' : 4,
-                      borderLeft: b.clippedLeft ? '3px solid rgba(255,255,255,0.4)' : 'none',
-                      cursor: 'pointer',
+                      borderLeft: !b.isDraft && b.clippedLeft ? '3px solid rgba(255,255,255,0.4)' : undefined,
+                      cursor: row.isDraft ? 'default' : 'pointer',
                       overflow: 'hidden',
                     }}
                   >
-                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: '#0a0c10' }}>
+                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: b.isDraft ? 'var(--accent2)' : '#0a0c10' }}>
                       {b.stage.stage}
                     </span>
                   </button>
@@ -235,95 +232,17 @@ export default function TimelinePage() {
         )}
       </div>
 
-      {/* Block 2 — Free capacity */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-3">
-          <div className="font-head font-semibold tracking-wide text-xs" style={{ color: 'var(--text2)' }}>
-            ОКНО ДЛЯ НОВОГО ДОГОВОРА — СВОБОДНАЯ ЁМКОСТЬ
-          </div>
-          <div className="flex items-center gap-3 text-[10px]" style={{ color: 'var(--text3)' }}>
-            <LegendDot color="var(--accent)" label="≥ 50%" />
-            <LegendDot color="var(--accent3)" label="20–49%" />
-            <LegendDot color="var(--accent4)" label="< 20%" />
-          </div>
-        </div>
-        <FilterButtons options={roleFilterOptions} value={empFilter} onChange={setEmpFilter} />
-
-        <div className="mt-4">
-          {/* Month header */}
-          <div className="grid gap-1 mb-1.5" style={{ gridTemplateColumns: `200px repeat(${months.length}, 1fr)` }}>
-            <div />
-            {months.map(m => (
-              <div key={m.key} className="text-center text-[10px] tracking-wide" style={{ color: 'var(--text3)' }}>{m.label}</div>
-            ))}
-          </div>
-
-          {/* Team summary */}
-          {activeRoles.length > 0 && (
-            <div className="grid gap-1 mb-2 items-center" style={{ gridTemplateColumns: `200px repeat(${months.length}, 1fr)` }}>
-              <div className="pr-2">
-                <div className="text-[12px] font-bold" style={{ color: 'var(--text)' }}>Команда</div>
-                <div className="text-[9px] mt-0.5" style={{ color: 'var(--text3)' }}>минимум по ролям</div>
-              </div>
-              {teamSummary.map((pct, i) => (
-                <FreeCell key={i} pct={pct} label={`${pct}%`} bold />
-              ))}
-            </div>
-          )}
-
-          {activeRoles.length === 0 && (
-            <div className="text-xs py-6 text-center" style={{ color: 'var(--text3)' }}>Добавьте сотрудников</div>
-          )}
-
-          {activeRoles
-            .filter(role => empFilter === 'all' || empFilter === role)
-            .map(role => {
-              const roleEmps = employees.filter(e => e.role === role)
-              const totalCap = roleEmps.length * maxH
-              const roleData = months.map(m => {
-                const totalLoad = roleEmps.reduce((sum, e) => sum + (load[e.id]?.[m.key] || 0), 0)
-                const free = Math.max(0, totalCap - totalLoad)
-                const pct = totalCap > 0 ? Math.round(free / totalCap * 100) : 0
-                return { free: Math.round(free), pct }
-              })
-              const color = ROLE_COLORS[role] || 'var(--accent)'
-              return (
-                <Fragment key={role}>
-                  <div className="grid gap-1 mb-1 items-center mt-2 pt-2" style={{ gridTemplateColumns: `200px repeat(${months.length}, 1fr)`, borderTop: '1px solid var(--border)' }}>
-                    <div className="pr-2">
-                      <div className="text-[11px] font-medium" style={{ color }}>{role}</div>
-                      <div className="text-[9px] mt-0.5" style={{ color: 'var(--text3)' }}>{roleEmps.length} чел · {totalCap} ч/мес</div>
-                    </div>
-                    {roleData.map((d, i) => (
-                      <FreeCell key={i} pct={d.pct} label={`${d.pct}%`} sub={`${d.free} ч`} />
-                    ))}
-                  </div>
-
-                  {/* Individual employees */}
-                  {roleEmps.map(emp => {
-                    const empData = months.map(m => {
-                      const empLoad = load[emp.id]?.[m.key] || 0
-                      const free = Math.max(0, maxH - empLoad)
-                      const pct = maxH > 0 ? Math.round(free / maxH * 100) : 0
-                      return { free: Math.round(free), pct }
-                    })
-                    return (
-                      <div key={emp.id} className="grid gap-1 mb-1 items-center" style={{ gridTemplateColumns: `200px repeat(${months.length}, 1fr)` }}>
-                        <div className="pr-2 pl-3">
-                          <div className="text-[11px] truncate" style={{ color: 'var(--text2)' }}>{emp.name}</div>
-                          <div className="text-[9px] mt-0.5 truncate" style={{ color: 'var(--text3)' }}>{emp.type}</div>
-                        </div>
-                        {empData.map((d, i) => (
-                          <FreeCell key={i} pct={d.pct} label={`${d.free} ч`} sub={`${d.pct}%`} compact />
-                        ))}
-                      </div>
-                    )
-                  })}
-                </Fragment>
-              )
-            })}
-        </div>
-      </div>
+      {/* Block 2 — Contract Slot Finder */}
+      <ContractSlotFinder
+        objects={objects}
+        employees={employees}
+        contracts={contracts}
+        norms={norms}
+        settings={settings}
+        months={months}
+        effectiveLoad={load}
+        onDraftChange={handleDraftChange}
+      />
 
       {/* Stage detail modal */}
       {selected && (
@@ -363,41 +282,18 @@ export default function TimelinePage() {
   )
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
+function LegendDot({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
   return (
     <span className="flex items-center gap-1">
-      <span style={{ display: 'inline-block', width: 10, height: 10, background: color, borderRadius: 2 }} />
+      <span
+        style={{
+          display: 'inline-block', width: 10, height: 10, borderRadius: 2,
+          background: dashed ? 'transparent' : color,
+          border: dashed ? `2px dashed ${color}` : 'none',
+        }}
+      />
       {label}
     </span>
-  )
-}
-
-interface FreeCellProps {
-  pct: number
-  label: string
-  sub?: string
-  bold?: boolean
-  compact?: boolean
-}
-
-function FreeCell({ pct, label, sub, bold, compact }: FreeCellProps) {
-  let bg = 'rgba(74,240,180,0.12)'
-  let fg = 'var(--accent)'
-  if (pct < 20) {
-    bg = 'rgba(245,106,106,0.12)'
-    fg = 'var(--accent4)'
-  } else if (pct < 50) {
-    bg = 'rgba(245,168,74,0.12)'
-    fg = 'var(--accent3)'
-  }
-  return (
-    <div
-      className="rounded-md flex flex-col items-center justify-center"
-      style={{ height: compact ? 38 : 46, background: bg }}
-    >
-      <span className={bold ? 'text-[12px] font-bold' : 'text-[11px] font-semibold'} style={{ color: fg }}>{label}</span>
-      {sub && <span className="text-[9px] mt-0.5" style={{ color: fg, opacity: 0.7 }}>{sub}</span>}
-    </div>
   )
 }
 
