@@ -22,8 +22,6 @@ Required environment variables (copy `.env.example` → `.env`):
 
 Default login after seeding: `admin@example.com` / `admin123`
 
-No test runner is configured — verify changes manually via the dev server.
-
 ## Architecture
 
 **Stack:** Next.js 14 App Router · PostgreSQL · Prisma 5 · NextAuth v4 · Tailwind CSS · TypeScript
@@ -47,55 +45,17 @@ Route handlers exist for: `objects`, `contracts` (with nested `team` + `stages`)
 
 NextAuth credentials provider (`lib/auth.ts`) uses bcrypt password comparison against the `User` table. JWT strategy — role is stored in the token and surfaced on `session.user.role`. Route protection is handled by `middleware.ts` using NextAuth's default middleware export.
 
-> **Note:** `middleware.ts` explicitly lists protected routes. If you add a new page route, add its pattern to the `matcher` array. Currently `/timeline` is intentionally public (no auth required on load) — add it to the matcher if that changes.
-
 ### Domain model
 
 - **Object** — a building project with type (Жилой/Коммерческий), complexity, area, and room counts
 - **Contract** — links an Object to a service type (ДПИ/ЭАП/АЛР/Авторский надзор), has a team (role → employee assignments) and stages (ordered schedule entries with start date + working days)
 - **Employee** — has a role (Тимлид/Дизайнер/Визуализатор/Проектировщик/Архитектор/Комплектатор) and type (Ведущий/Специалист/Младший), which affect load coefficients
 - **Norm** — lookup table mapping service + stage + role → base hours per unit; `base` field determines which object dimension to multiply by
-- **Settings** — singleton row (`id = "global"`) storing working hours, all coefficients, and `customHolidays` (JSON array of `"YYYY-MM-DD"` strings)
-
-### Calculation pipeline
-
-```
-Norm.hResidential|hCommercial
-  × object.area|rooms*    (base field)
-  × kC (complexity coeff) 
-  × kT (employee type coeff)
-= role hours per stage     → calcStageHours()
-
-distributed across months by working-day overlap
-= LoadResult[empId][monthKey]  → calcLoad()
-```
-
-Working days skip weekends + Russian federal holidays + `customHolidays`. Holiday logic is in `lib/holidays.ts`:
-- `RU_HOLIDAY_MONTH_DAYS` — 15 recurring `"MM-DD"` strings
-- `buildHolidaySet(fromYear, toYear, customHolidays)` — expands to `Set<"YYYY-MM-DD">`
-- `addWorkingDays()` and `countWorkingDays()` in `lib/calc.ts` accept an optional `holidays` set
-
-### Slot finder
-
-`lib/slotFinder.ts` exports `findSlots(SlotInput): SlotResult` — a pure client-side function that answers "when can I start a new contract and with which team?". It:
-1. Computes required hours per role per stage via inline norm math (kT=1.0 baseline, no team yet)
-2. Runs `calcLoad()` once on existing contracts (outside the date loop)
-3. Iterates candidate start dates in 7-day steps up to 180 days
-4. For each date: chains stage schedules, distributes hours across months, finds one employee per role whose free capacity ≥ required per month
-5. Returns `primary` candidate + up to 2 alternatives
-
-The result is fed to `components/timeline/ContractSlotFinder.tsx` (Block 2 of `/timeline`), which also pushes a `SlotDraftPreview` to the parent page so Block 1 can render dashed preview bars and `calcLoad` can include the draft contract.
-
-When "Создать договор" is clicked, a `ContractDraftPayload` is stored in `sessionStorage['contractDraft']`. `app/(app)/contracts/page.tsx` reads and clears it on mount — if `objectDraft` is present, it first `POST /api/objects` to create the object, then opens the contract modal pre-filled.
+- **Settings** — singleton row (`id = "global"`) storing working hours and all coefficients
 
 ### UI components
 
-All shared UI is in `components/ui/index.tsx`: `Modal`, `Confirm`, `PeriodNav`, `FilterButtons`, `PageHeader`, `FormGroup`, `Tag`. Layout shell (`Sidebar`, `Topbar`) is in `components/layout/`. Page-specific compound components live under `components/<page>/` (e.g. `components/timeline/`). Styles use CSS custom properties defined in `app/globals.css` (e.g. `var(--surface)`, `var(--accent)`, `var(--text2)`).
-
-### Utility helpers
-
-- `lib/api.ts` — `fetchJson<T>()`, `showError()`, `confirmDuplicateName()` used by all pages
-- `lib/coerce.ts` — `num()` and `int()` for safe API body parsing in route handlers
+All shared UI is in `components/ui/index.tsx`: `Modal`, `Confirm`, `PeriodNav`, `FilterButtons`, `PageHeader`, `FormGroup`, `Tag`. Layout shell (`Sidebar`, `Topbar`) is in `components/layout/`. Styles use CSS custom properties defined in `app/globals.css` (e.g. `var(--surface)`, `var(--accent)`, `var(--text2)`).
 
 ### User management
 
