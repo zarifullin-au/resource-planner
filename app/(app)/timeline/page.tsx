@@ -142,7 +142,7 @@ export default function TimelinePage() {
     <div>
       <div className="flex items-start justify-between gap-4 mb-2">
         <div>
-          <div className="font-head text-lg font-semibold mb-1">Дашборд</div>
+          <div className="font-head text-lg font-semibold mb-1">Сроки этапов</div>
           <div className="text-xs" style={{ color: 'var(--text2)' }}>Сроки этапов и подбор слота для нового договора</div>
         </div>
         <PeriodNav offset={offset} months={months} onShift={d => setOffset(o => o + d)} onReset={() => setOffset(0)} />
