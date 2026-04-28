@@ -24,6 +24,18 @@ Default login after seeding: `admin@example.com` / `admin123`
 
 No test runner is configured — verify changes manually via the dev server.
 
+## Deployment (Docker)
+
+```bash
+docker-compose up -d                          # Dev with local PostgreSQL
+docker-compose -f docker-compose.prod.yml up -d  # Production
+./scripts/update.sh                           # Pull + rebuild + migrate (server)
+./scripts/backup.sh                           # Create compressed DB backup
+./scripts/restore.sh ./backups/<file>.sql.gz  # Restore from backup
+```
+
+Data persists across updates in Docker volume `postgres_prod_data`. Migrations run automatically in `update.sh` via `prisma migrate deploy`.
+
 ## Architecture
 
 **Stack:** Next.js 14 App Router · PostgreSQL · Prisma 5 · NextAuth v4 · Tailwind CSS · TypeScript
@@ -51,10 +63,10 @@ NextAuth credentials provider (`lib/auth.ts`) uses bcrypt password comparison ag
 
 ### Domain model
 
-- **Object** — a building project with type (Жилой/Коммерческий), complexity, area, and room counts
-- **Contract** — links an Object to a service type (ДПИ/ЭАП/АЛР/Авторский надзор), has a team (role → employee assignments) and stages (ordered schedule entries with start date + working days)
-- **Employee** — has a role (Тимлид/Дизайнер/Визуализатор/Проектировщик/Архитектор/Комплектатор) and type (Ведущий/Специалист/Младший), which affect load coefficients
-- **Norm** — lookup table mapping service + stage + role → base hours per unit; `base` field determines which object dimension to multiply by
+- **Object** — a building project with type (`Жилой`/`Коммерческий`), complexity (`Стандартный`/`Средней сложности`/`Сложный`), area, and room counts
+- **Contract** — links an Object to a service type (`ДПИ`/`ЭАП`/`АЛР`/`Авторский надзор`), has a team (role → employee assignments), stages (ordered schedule entries with start date + working days), and status (`active`/`done`)
+- **Employee** — has a role (`Тимлид`/`Дизайнер`/`Визуализатор`/`Проектировщик`/`Архитектор`/`Комплектатор`) and type (`Ведущий специалист`/`Специалист`/`Младший специалист`), which affect load coefficients
+- **Norm** — lookup table mapping service + stage + role → base hours per unit; `base` field is one of: `Нет`, `Площадь объекта`, `Кол-во комнат основные`, `Кол-во комнат вспомагательные`, `Кол-во комнат технические`, `Кол-во позиций ИИИ`
 - **Settings** — singleton row (`id = "global"`) storing working hours, all coefficients, and `customHolidays` (JSON array of `"YYYY-MM-DD"` strings)
 
 ### Calculation pipeline
@@ -62,8 +74,8 @@ NextAuth credentials provider (`lib/auth.ts`) uses bcrypt password comparison ag
 ```
 Norm.hResidential|hCommercial
   × object.area|rooms*    (base field)
-  × kC (complexity coeff) 
-  × kT (employee type coeff)
+  × kC (complexity coeff: kStandard/kMedium/kComplex)
+  × kT (employee type coeff: kSenior/kMid/kJunior)
 = role hours per stage     → calcStageHours()
 
 distributed across months by working-day overlap
@@ -96,6 +108,7 @@ All shared UI is in `components/ui/index.tsx`: `Modal`, `Confirm`, `PeriodNav`, 
 
 - `lib/api.ts` — `fetchJson<T>()`, `showError()`, `confirmDuplicateName()` used by all pages
 - `lib/coerce.ts` — `num()` and `int()` for safe API body parsing in route handlers
+- `lib/calc.ts` — also exports `ROLE_COLORS`, `ROLES`, `STAGES`, `SERVICES`, `BASES`, `EMPLOYEE_TYPES`, `OBJECT_TYPES`, `COMPLEXITY_TYPES` as canonical enum arrays
 
 ### User management
 
