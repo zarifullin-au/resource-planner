@@ -11,7 +11,9 @@
       "Bash(grep -E \"\\\\.ts$\")",
       "Bash(npx tsc *)",
       "Bash(curl *)",
-      "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/install.sh\")"
+      "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/install.sh\")",
+      "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/update.sh\")",
+      "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/backup.sh\" \"/Users/user/Resource Planner/resource-planner/scripts/restore.sh\")"
     ]
   }
 }
