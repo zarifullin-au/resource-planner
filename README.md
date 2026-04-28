@@ -2,23 +2,24 @@
 
 Система планирования нагрузки сотрудников. Next.js 14 + PostgreSQL + Prisma + NextAuth.
 
-## Быстрый старт
+## Установка
 
-### 1. Требования
+### Вариант 1: Установочный скрипт (рекомендуется)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/zarifullin-au/resource-planner/main/scripts/install.sh | bash
+```
+
+### Вариант 2: Manual установка
+
+**Требования:**
 - Node.js 18+
 - PostgreSQL (локально или облако: Supabase, Neon, Railway)
 
-### 2. Установка
-
 ```bash
-# Клонируйте или скопируйте папку проекта, затем:
+git clone https://github.com/zarifullin-au/resource-planner.git
 cd resource-planner
 npm install
-```
-
-### 3. Настройка окружения
-
-```bash
 cp .env.example .env
 ```
 
@@ -29,23 +30,21 @@ NEXTAUTH_SECRET="$(openssl rand -base64 32)"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-### 4. База данных
-
 ```bash
-# Создать базу и применить схему
-npm run db:migrate
-
-# Заполнить демо-данными (объекты, сотрудники, договоры, нормативы)
-npm run db:seed
+npm run db:migrate    # Создать схему БД
+npm run db:seed       # Заполнить демо-данными
+npm run dev           # Запустить dev сервер
 ```
 
-### 5. Запуск
+### Вариант 3: Docker (с PostgreSQL)
 
 ```bash
-npm run dev
+docker-compose up -d
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000)
+Откроется [http://localhost:3000](http://localhost:3000)
+
+---
 
 **Логин по умолчанию:**
 - Email: `admin@example.com`
@@ -104,11 +103,23 @@ const hash = await bcrypt.hash('пароль', 10)
 await prisma.user.create({ data: { name: 'Имя', email: 'email@example.com', password: hash } })
 ```
 
-## Продакшн деплой
+## Развертывание
+
+### Локально в Docker
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### На Vercel (фронтенд) + PostgreSQL облако
+
+1. Форкните репозиторий на GitHub
+2. Подключите к Vercel: https://vercel.com/import
+3. Добавьте переменные окружения в Vercel Dashboard:
+   - `DATABASE_URL` → Neon/Supabase
+   - `NEXTAUTH_SECRET` → `openssl rand -base64 32`
+   - `NEXTAUTH_URL` → ваш домен (например, `https://app.yoursite.com`)
 
 ```bash
 npm run build
 npm start
 ```
-
-Рекомендуемые платформы: **Vercel** (бесплатно для небольших команд) + **Neon** или **Supabase** для PostgreSQL.
