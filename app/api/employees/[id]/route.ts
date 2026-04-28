@@ -28,7 +28,7 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
   })
   const active = teams.filter(t => t.contract.status !== 'done')
   if (active.length > 0) {
-    const names = [...new Set(active.map(t => `«${t.contract.name}»`))].join(', ')
+    const names = Array.from(new Set(active.map(t => `«${t.contract.name}»`))).join(', ')
     return NextResponse.json({
       error: `Сотрудник назначен на активные договоры: ${names}. Сначала удалите его из команд.`,
     }, { status: 409 })

@@ -5,8 +5,7 @@ import { usePathname } from 'next/navigation'
 const NAV = [
   { section: 'Обзор', items: [
     { href: '/timeline', icon: '⊟', label: 'Сроки этапов' },
-    { href: '/dashboard', icon: '⬡', label: 'Загрузка сотрудников' },
-    { href: '/heatmap', icon: '▦', label: 'Тепловая карта' },
+    { href: '/heatmap', icon: '▦', label: 'Нагрузка сотрудников' },
   ]},
   { section: 'Данные', items: [
     { href: '/objects', icon: '◈', label: 'Объекты' },
