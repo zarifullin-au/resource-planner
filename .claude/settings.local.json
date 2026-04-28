@@ -13,7 +13,16 @@
       "Bash(curl *)",
       "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/install.sh\")",
       "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/update.sh\")",
-      "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/backup.sh\" \"/Users/user/Resource Planner/resource-planner/scripts/restore.sh\")"
+      "Bash(chmod +x \"/Users/user/Resource Planner/resource-planner/scripts/backup.sh\" \"/Users/user/Resource Planner/resource-planner/scripts/restore.sh\")",
+      "WebSearch",
+      "WebFetch(domain:teamstorm.io)",
+      "WebFetch(domain:team-storm.ru)",
+      "WebFetch(domain:soware.ru)",
+      "WebFetch(domain:picktech.ru)",
+      "WebFetch(domain:docs.teamstorm.io)",
+      "WebFetch(domain:app.teamstorm.io)",
+      "WebFetch(domain:blog.teamstorm.io)",
+      "Bash(python3 *)"
     ]
   }
 }

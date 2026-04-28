@@ -38,7 +38,7 @@ export function Sidebar() {
                 className="flex items-center gap-2.5 px-5 py-2.5 text-xs transition-all duration-150"
                 style={{
                   color: active ? 'var(--accent)' : 'var(--text2)',
-                  background: active ? 'rgba(74,240,180,0.07)' : 'transparent',
+                  background: active ? 'rgba(26,107,255,0.07)' : 'transparent',
                   borderRight: active ? '2px solid var(--accent)' : '2px solid transparent',
                 }}
               >

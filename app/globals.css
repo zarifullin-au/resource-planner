@@ -1,20 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #0a0c10;
-  --surface: #111318;
-  --surface2: #181c24;
-  --border: #1f2535;
-  --accent: #4af0b4;
-  --accent2: #7c6af5;
-  --accent3: #f5a84a;
-  --accent4: #f56a6a;
-  --text: #e8ecf5;
-  --text2: #8891a8;
-  --text3: #4a5268;
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --surface2: #f4f4f6;
+  --border: #e4e6eb;
+  --accent: #1A6BFF;
+  --accent2: #6366f1;
+  --accent3: #f59e0b;
+  --accent4: #ef4444;
+  --text: #1f2041;
+  --text2: #6b7280;
+  --text3: #9ca3af;
 }
 
 * { box-sizing: border-box; }
@@ -22,7 +21,7 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--font-manrope), 'Manrope', sans-serif;
   font-size: 13px;
 }
 
@@ -33,51 +32,52 @@ body {
 
 /* Heatmap cells */
 .hm-0 { background: var(--surface2); color: var(--text3); }
-.hm-1 { background: rgba(74,240,180,0.15); color: #4af0b4; }
-.hm-2 { background: rgba(74,240,180,0.3); color: #4af0b4; }
-.hm-3 { background: rgba(74,240,180,0.5); color: #0a0c10; }
-.hm-4 { background: rgba(245,168,74,0.5); color: #0a0c10; }
-.hm-5 { background: rgba(245,106,106,0.6); color: white; }
+.hm-1 { background: rgba(26,107,255,0.10); color: #1A6BFF; }
+.hm-2 { background: rgba(26,107,255,0.22); color: #1557e0; }
+.hm-3 { background: rgba(26,107,255,0.50); color: #ffffff; }
+.hm-4 { background: rgba(245,158,11,0.50); color: #92400e; }
+.hm-5 { background: rgba(239,68,68,0.60); color: white; }
 
 @layer components {
   .card {
-    @apply bg-[#111318] border border-[#1f2535] rounded-[10px] p-5;
+    @apply bg-white border border-[#e4e6eb] rounded-[10px] p-5;
+    box-shadow: 0 1px 4px rgba(31,32,65,0.06);
   }
   .btn {
-    @apply px-4 py-2 rounded-md border-none cursor-pointer font-mono text-xs font-medium transition-all duration-150;
+    @apply px-4 py-2 rounded-md border-none cursor-pointer text-xs font-medium transition-all duration-150;
   }
   .btn-primary {
-    @apply bg-accent text-bg hover:bg-[#62f5c0];
+    @apply bg-[#1A6BFF] text-white hover:bg-[#1557e0];
   }
   .btn-ghost {
-    @apply bg-transparent text-[#8891a8] border border-[#1f2535] hover:text-[#e8ecf5] hover:border-[#4a5268];
+    @apply bg-transparent text-[#6b7280] border border-[#e4e6eb] hover:text-[#1f2041] hover:border-[#9ca3af];
   }
   .btn-danger {
-    @apply bg-transparent text-accent4 border border-[rgba(245,106,106,0.3)] hover:bg-[rgba(245,106,106,0.1)];
+    @apply bg-transparent text-[#ef4444] border border-[rgba(239,68,68,0.3)] hover:bg-[rgba(239,68,68,0.08)];
   }
   .btn-sm {
     @apply px-3 py-1.5 text-[11px];
   }
   .form-input {
-    @apply bg-[#181c24] border border-[#1f2535] text-[#e8ecf5] px-3 py-2 rounded-md font-mono text-xs outline-none w-full
-    focus:border-accent transition-colors duration-150;
+    @apply bg-white border border-[#e4e6eb] text-[#1f2041] px-3 py-2 rounded-md text-xs outline-none w-full
+    focus:border-[#1A6BFF] transition-colors duration-150;
   }
   .form-label {
-    @apply text-[10px] tracking-widest text-[#4a5268] uppercase block mb-1.5;
+    @apply text-[10px] tracking-widest text-[#9ca3af] uppercase block mb-1.5;
   }
   .tag {
     @apply inline-block px-2 py-0.5 rounded text-[10px] tracking-wide font-medium;
   }
   .tag-green {
-    @apply bg-[rgba(74,240,180,0.12)] text-accent border border-[rgba(74,240,180,0.25)];
+    @apply bg-[rgba(22,163,74,0.10)] text-[#16a34a] border border-[rgba(22,163,74,0.25)];
   }
   .tag-purple {
-    @apply bg-[rgba(124,106,245,0.12)] text-accent2 border border-[rgba(124,106,245,0.25)];
+    @apply bg-[rgba(99,102,241,0.10)] text-[#4f46e5] border border-[rgba(99,102,241,0.25)];
   }
   .tag-orange {
-    @apply bg-[rgba(245,168,74,0.12)] text-accent3 border border-[rgba(245,168,74,0.25)];
+    @apply bg-[rgba(245,158,11,0.10)] text-[#d97706] border border-[rgba(245,158,11,0.25)];
   }
   .tag-gray {
-    @apply bg-[rgba(74,82,104,0.3)] text-[#8891a8] border border-[#1f2535];
+    @apply bg-[rgba(107,114,128,0.08)] text-[#6b7280] border border-[#e4e6eb];
   }
 }

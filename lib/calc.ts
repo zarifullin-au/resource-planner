@@ -2,12 +2,12 @@ import type { AppSettings, Contract, Employee, MonthData, Norm, LoadResult, Proj
 import { buildHolidaySet, toIsoDate } from '@/lib/holidays'
 
 export const ROLE_COLORS: Record<string, string> = {
-  'Тимлид': '#4af0b4',
-  'Дизайнер': '#7c6af5',
-  'Визуализатор': '#f5a84a',
-  'Проектировщик': '#5bc8f5',
-  'Архитектор': '#f06292',
-  'Комплектатор': '#aaaaaa',
+  'Тимлид': '#1A6BFF',
+  'Дизайнер': '#6366f1',
+  'Визуализатор': '#f59e0b',
+  'Проектировщик': '#0ea5e9',
+  'Архитектор': '#ec4899',
+  'Комплектатор': '#94a3b8',
 }
 
 export const ROLES = ['Тимлид', 'Дизайнер', 'Визуализатор', 'Проектировщик', 'Архитектор', 'Комплектатор']

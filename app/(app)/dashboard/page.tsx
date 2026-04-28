@@ -59,7 +59,7 @@ export default function DashboardPage() {
         </div>
 
         {activeRoles.map(role => {
-          const color = ROLE_COLORS[role] || '#4af0b4'
+          const color = ROLE_COLORS[role] || '#94a3b8'
           const roleEmps = employees.filter(e => e.role === role)
           const totalAvailH = roleEmps.length * maxH
 
@@ -98,7 +98,7 @@ export default function DashboardPage() {
                       <div className="absolute left-0 right-0" style={{ bottom: `${normLinePct}%`, height: 1.5, background: 'rgba(255,255,255,0.35)', zIndex: 2 }} />
                     )}
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 z-10">
-                      <span className="text-[11px] font-bold" style={{ color: labelDark ? '#0a0c10' : 'var(--text2)' }}>
+                      <span className="text-[11px] font-bold" style={{ color: labelDark ? '#1f2041' : 'var(--text2)' }}>
                         {d.pct ? `${d.pct}%` : '—'}
                       </span>
                       {d.pct > 0 && (
@@ -135,7 +135,7 @@ export default function DashboardPage() {
           </div>
 
           {filteredEmps.map(emp => {
-            const roleColor = ROLE_COLORS[emp.role] || '#4af0b4'
+            const roleColor = ROLE_COLORS[emp.role] || '#94a3b8'
             return (
               <div key={emp.id} className="grid gap-1 mb-2 items-center" style={{ gridTemplateColumns: `130px repeat(${months.length}, 1fr)` }}>
                 <div className="pr-2">
@@ -161,7 +161,7 @@ export default function DashboardPage() {
                       <div className="absolute bottom-0 left-0 right-0 rounded-b-md transition-all duration-500"
                         style={{ height: `${barPct}%`, background: barColor, opacity: 0.85 }} />
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 z-10">
-                        <span className="text-[11px] font-bold" style={{ color: labelDark ? '#0a0c10' : 'var(--text2)' }}>
+                        <span className="text-[11px] font-bold" style={{ color: labelDark ? '#1f2041' : 'var(--text2)' }}>
                           {Math.round(v) ? `${Math.round(v)}ч` : '—'}
                         </span>
                         {Math.round(v) > 0 && (

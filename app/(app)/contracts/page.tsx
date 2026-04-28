@@ -267,7 +267,7 @@ export default function ContractsPage() {
                   const teamEntry = c.team.find(t => t.role === role)
                   const emp = employees.find(e => e.id === teamEntry?.employeeId)
                   return (
-                    <tr key={role} className="border-b border-[rgba(31,37,53,0.5)]">
+                    <tr key={role} className="border-b border-[var(--border)]">
                       <td className="py-2 pr-3" style={{ color: ROLE_COLORS[role] || '#aaa' }}>{role}</td>
                       <td className="py-2 pr-3" style={{ color: 'var(--text2)' }}>{emp?.name ?? '—'}</td>
                       <td className="py-2 pr-3" style={{ color: 'var(--text)' }}>{Math.round(h * 10) / 10}</td>
@@ -320,7 +320,7 @@ function StageRow({
   const disabled = !stage
 
   return (
-    <div className="flex items-center gap-3 py-1.5 border-b border-[rgba(31,37,53,0.4)] last:border-b-0">
+    <div className="flex items-center gap-3 py-1.5 border-b border-[var(--border)] last:border-b-0">
       <span className="text-[11px] w-14" style={{ color: 'var(--text2)' }}>{stageName}</span>
       <input
         type="date"

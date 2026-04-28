@@ -363,7 +363,7 @@ function ResultPanel({
               className="btn btn-sm"
               style={{
                 border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                background: active ? 'rgba(74,240,180,0.10)' : 'transparent',
+                background: active ? 'rgba(26,107,255,0.08)' : 'transparent',
                 color: active ? 'var(--accent)' : 'var(--text2)',
               }}
               onClick={() => onSelect(i)}
@@ -441,7 +441,7 @@ function ResultPanel({
 }
 
 function LoadCell({ pct, hours }: { pct: number; hours: number }) {
-  let bg = 'rgba(74,240,180,0.12)'
+  let bg = 'rgba(26,107,255,0.10)'
   let fg = 'var(--accent)'
   if (pct >= 100) {
     bg = 'rgba(245,106,106,0.18)'

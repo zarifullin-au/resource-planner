@@ -84,7 +84,7 @@ export default function SettingsPage() {
         </div>
       )}
       {saved && (
-        <div className="mb-4 px-4 py-2.5 rounded-lg text-xs" style={{ background: 'rgba(74,240,180,0.08)', border: '1px solid rgba(74,240,180,0.25)', color: 'var(--accent)' }}>
+        <div className="mb-4 px-4 py-2.5 rounded-lg text-xs" style={{ background: 'rgba(26,107,255,0.06)', border: '1px solid rgba(26,107,255,0.20)', color: 'var(--accent)' }}>
           ✓ Настройки сохранены и применены ко всем проектам
         </div>
       )}

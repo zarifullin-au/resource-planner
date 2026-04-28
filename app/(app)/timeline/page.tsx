@@ -221,7 +221,7 @@ export default function TimelinePage() {
                       overflow: 'hidden',
                     }}
                   >
-                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: b.isDraft ? 'var(--accent2)' : '#0a0c10' }}>
+                    <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: b.isDraft ? 'var(--accent2)' : '#1f2041' }}>
                       {b.stage.stage}
                     </span>
                   </button>

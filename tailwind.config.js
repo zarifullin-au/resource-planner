@@ -8,18 +8,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: '#0a0c10',
-        surface: '#111318',
-        surface2: '#181c24',
-        border: '#1f2535',
-        accent: '#4af0b4',
-        accent2: '#7c6af5',
-        accent3: '#f5a84a',
-        accent4: '#f56a6a',
+        bg: '#f7f8fb',
+        surface: '#ffffff',
+        surface2: '#f4f4f6',
+        border: '#e4e6eb',
+        accent: '#1A6BFF',
+        accent2: '#6366f1',
+        accent3: '#f59e0b',
+        accent4: '#ef4444',
       },
       fontFamily: {
-        head: ['var(--font-unbounded)', 'sans-serif'],
-        mono: ['var(--font-ibm-plex-mono)', 'monospace'],
+        head: ['var(--font-manrope)', 'sans-serif'],
+        mono: ['var(--font-manrope)', 'sans-serif'],
       },
     },
   },

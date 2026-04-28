@@ -7,7 +7,7 @@ import { fetchJson, showError } from '@/lib/api'
 import type { Norm } from '@/types'
 
 const SERVICE_COLORS: Record<string, string> = {
-  'ДПИ': '#4af0b4', 'ЭАП': '#7c6af5', 'АЛР': '#f5a84a', 'Авторский надзор': '#5bc8f5',
+  'ДПИ': '#1A6BFF', 'ЭАП': '#6366f1', 'АЛР': '#f59e0b', 'Авторский надзор': '#0ea5e9',
 }
 
 const empty = (): Partial<Norm> => ({
@@ -189,7 +189,7 @@ export default function NormsPage() {
         </div>
       )}
       {savedNotice && (
-        <div className="mb-4 px-4 py-2.5 rounded-lg text-xs" style={{ background: 'rgba(74,240,180,0.08)', border: '1px solid rgba(74,240,180,0.25)', color: 'var(--accent)' }}>
+        <div className="mb-4 px-4 py-2.5 rounded-lg text-xs" style={{ background: 'rgba(26,107,255,0.06)', border: '1px solid rgba(26,107,255,0.20)', color: 'var(--accent)' }}>
           ✓ Нормативы сохранены и применены ко всем расчётам
         </div>
       )}
@@ -221,7 +221,7 @@ export default function NormsPage() {
                 return (
                   <tr
                     key={n.id}
-                    className="border-b border-[rgba(31,37,53,0.5)] hover:bg-[var(--surface2)]"
+                    className="border-b border-[var(--border)] hover:bg-[var(--surface2)]"
                     style={isDirty ? { background: 'rgba(245,168,74,0.06)' } : undefined}
                   >
                     <td className="px-3 py-2">

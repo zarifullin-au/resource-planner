@@ -70,11 +70,11 @@ export default function EmployeesPage() {
             <tbody>
               {employees.map(emp => (
                 <tr key={emp.id} className="hover:bg-[var(--surface2)] transition-colors">
-                  <td className="px-3 py-2.5 font-medium border-b border-[rgba(31,37,53,0.6)]" style={{ color: 'var(--text)' }}>{emp.name}</td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]" style={{ color: ROLE_COLORS[emp.role] || '#aaa' }}>{emp.role}</td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]"><Tag variant="gray">{emp.type}</Tag></td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]" style={{ color: 'var(--text2)' }}>{emp.salary}</td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]">
+                  <td className="px-3 py-2.5 font-medium border-b border-[var(--border)]" style={{ color: 'var(--text)' }}>{emp.name}</td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]" style={{ color: ROLE_COLORS[emp.role] || '#aaa' }}>{emp.role}</td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]"><Tag variant="gray">{emp.type}</Tag></td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]" style={{ color: 'var(--text2)' }}>{emp.salary}</td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]">
                     <div className="flex gap-1">
                       <button className="btn btn-ghost btn-sm px-2" onClick={() => openEdit(emp)}>✎</button>
                       <button className="btn btn-danger btn-sm px-2" onClick={() => setDeleteId(emp.id)}>✕</button>

@@ -75,17 +75,17 @@ export default function ObjectsPage() {
             <tbody>
               {objects.map(obj => (
                 <tr key={obj.id} className="hover:bg-[var(--surface2)] transition-colors">
-                  <td className="px-3 py-2.5 text-[11px] font-mono border-b border-[rgba(31,37,53,0.6)]" style={{ color: 'var(--text3)' }}>{obj.code || '—'}</td>
-                  <td className="px-3 py-2.5 font-medium border-b border-[rgba(31,37,53,0.6)]" style={{ color: 'var(--text)' }}>{obj.name}</td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]">
+                  <td className="px-3 py-2.5 text-[11px] font-mono border-b border-[var(--border)]" style={{ color: 'var(--text3)' }}>{obj.code || '—'}</td>
+                  <td className="px-3 py-2.5 font-medium border-b border-[var(--border)]" style={{ color: 'var(--text)' }}>{obj.name}</td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]">
                     <Tag variant={obj.type === 'Жилой' ? 'green' : 'purple'}>{obj.type}</Tag>
                   </td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]">
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]">
                     <Tag variant="gray">{obj.complexity}</Tag>
                   </td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]" style={{ color: 'var(--text2)' }}>{obj.area} м²</td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]" style={{ color: 'var(--text2)' }}>{obj.roomsMain} / {obj.roomsAux} / {obj.roomsTech}</td>
-                  <td className="px-3 py-2.5 border-b border-[rgba(31,37,53,0.6)]">
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]" style={{ color: 'var(--text2)' }}>{obj.area} м²</td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]" style={{ color: 'var(--text2)' }}>{obj.roomsMain} / {obj.roomsAux} / {obj.roomsTech}</td>
+                  <td className="px-3 py-2.5 border-b border-[var(--border)]">
                     <div className="flex gap-1">
                       <button className="btn btn-ghost btn-sm px-2" onClick={() => openEdit(obj)}>✎</button>
                       <button className="btn btn-danger btn-sm px-2" onClick={() => setDeleteId(obj.id)}>✕</button>
