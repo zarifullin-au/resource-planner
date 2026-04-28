@@ -102,13 +102,24 @@ When "Создать договор" is clicked, a `ContractDraftPayload` is sto
 
 ### UI components
 
-All shared UI is in `components/ui/index.tsx`: `Modal`, `Confirm`, `PeriodNav`, `FilterButtons`, `PageHeader`, `FormGroup`, `Tag`. Layout shell (`Sidebar`, `Topbar`) is in `components/layout/`. Page-specific compound components live under `components/<page>/` (e.g. `components/timeline/`). Styles use CSS custom properties defined in `app/globals.css` (e.g. `var(--surface)`, `var(--accent)`, `var(--text2)`).
+All shared UI is in `components/ui/index.tsx`: `Modal`, `Confirm`, `PeriodNav`, `FilterButtons`, `PageHeader`, `FormGroup`, `Tag`. Layout shell (`Sidebar`, `Topbar`) is in `components/layout/`. Page-specific compound components live under `components/<page>/` (e.g. `components/timeline/`).
+
+Styles use CSS custom properties defined in `app/globals.css`. Light theme palette:
+- `--bg #f7f8fb` · `--surface #ffffff` · `--surface2 #f4f4f6` · `--border #e4e6eb`
+- `--accent #1A6BFF` · `--accent2 #6366f1` · `--accent3 #f59e0b` · `--accent4 #ef4444`
+- `--text #1f2041` · `--text2 #6b7280` · `--text3 #9ca3af`
+
+Font: Manrope (loaded via `next/font/google`, variable `--font-manrope`). Do not use `font-mono` or `font-display` Tailwind classes — both map to Manrope as well.
 
 ### Utility helpers
 
 - `lib/api.ts` — `fetchJson<T>()`, `showError()`, `confirmDuplicateName()` used by all pages
 - `lib/coerce.ts` — `num()` and `int()` for safe API body parsing in route handlers
 - `lib/calc.ts` — also exports `ROLE_COLORS`, `ROLES`, `STAGES`, `SERVICES`, `BASES`, `EMPLOYEE_TYPES`, `OBJECT_TYPES`, `COMPLEXITY_TYPES` as canonical enum arrays
+
+### TypeScript gotcha — Set iteration
+
+`tsconfig.json` targets `esnext` but the Next.js bundler config does not enable `downlevelIteration`. Spreading a `Set` with `[...new Set(...)]` raises **TS2802**. Always use `Array.from(new Set(...))` instead.
 
 ### User management
 
