@@ -16,7 +16,7 @@ COPY . .
 RUN npx prisma generate
 
 # Собираем Next.js приложение
-RUN npm run build
+RUN npm run build && mkdir -p /app/public
 
 # Stage 2: Продакшн образ
 FROM node:18-alpine
