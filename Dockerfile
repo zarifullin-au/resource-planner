@@ -23,6 +23,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Устанавливаем openssl и другие зависимости для Prisma
+RUN apk add --no-cache openssl
+
 # Устанавливаем только runtime зависимости
 COPY package*.json ./
 RUN npm ci --only=production
@@ -33,19 +36,23 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+# Запускаем миграции БД (перед переключением пользователя)
+ENV NODE_ENV=production
+RUN npx prisma db push --skip-generate || true
+
 # Создаем непривилегированного пользователя
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+    adduser -S nextjs -u 1001 && \
+    chown -R nextjs:nodejs /app
 
 USER nextjs
 
 EXPOSE 3000
 
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
-CMD ["node", "-e", "require('child_process').execSync('npx prisma db push --skip-generate', {stdio: 'inherit'}); require('next/dist/bin/next').nextStart()"]
+CMD ["node_modules/.bin/next", "start"]
