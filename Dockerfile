@@ -26,16 +26,16 @@ WORKDIR /app
 # Устанавливаем openssl и другие зависимости для Prisma
 RUN apk add --no-cache openssl
 
-# Копируем package.json и устанавливаем только runtime зависимости
+# Копируем package.json
 COPY package*.json ./
-RUN npm ci --only=production
+
+# Копируем весь node_modules из builder (с правильными Prisma бинарниками)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Копируем все необходимые файлы из builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Запускаем миграции БД (перед переключением пользователя)
 ENV NODE_ENV=production
