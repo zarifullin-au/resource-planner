@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { num, int } from '@/lib/coerce'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const object = await prisma.object.findUnique({ where: { id: params.id } })
   if (!object) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(object)
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const body = await req.json()
   const name = String(body.name || '').trim()
   if (!name) return NextResponse.json({ error: 'Название объекта обязательно' }, { status: 400 })
@@ -47,9 +39,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   await prisma.object.delete({ where: { id: params.id } })
   return NextResponse.json({ ok: true })
 }

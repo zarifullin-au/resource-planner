@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { num } from '@/lib/coerce'
 
@@ -14,8 +12,6 @@ function parseHolidays(raw: string): string[] {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const settings = await prisma.settings.upsert({
     where: { id: 'global' },
     update: {},
@@ -25,8 +21,6 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
   const customHolidays = Array.isArray(body.customHolidays)
     ? body.customHolidays.filter((d: unknown) => typeof d === 'string')
