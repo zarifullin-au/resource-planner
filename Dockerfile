@@ -5,6 +5,9 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Устанавливаем openssl для Prisma (нужен и при сборке — Next.js рендерит API-роуты)
+RUN apk add --no-cache openssl
+
 # Копируем package.json и устанавливаем зависимости
 COPY package*.json ./
 RUN npm ci
