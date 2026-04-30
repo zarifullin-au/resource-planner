@@ -7,7 +7,7 @@ git pull
 
 docker-compose -f docker-compose.prod.yml up -d --build
 
-# Применить миграции схемы БД (безопасно — не затирает данные)
-docker-compose -f docker-compose.prod.yml exec app npx prisma migrate deploy
+# Применить схему БД (безопасно — не затирает данные, создаёт недостающие таблицы)
+docker-compose -f docker-compose.prod.yml exec app npx prisma db push --skip-generate
 
 echo "✅ Обновлено!"
