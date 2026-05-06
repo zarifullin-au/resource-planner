@@ -81,14 +81,12 @@ function getRoleHoursForStage(
     else if (n.base === 'Кол-во комнат вспомагательные') baseVal = object.roomsAux || 0
     else if (n.base === 'Кол-во комнат технические') baseVal = object.roomsTech || 0
     else if (n.base === 'Кол-во позиций ИИИ') baseVal = object.roomsIii || 0
+    else if (n.base === 'Сложность фасадов') baseVal = getFacadeK(object.facadeComplexity)
+    else if (n.base === 'Окружение') baseVal = getSurroundingsK(object.surroundings)
 
     const hPerUnit = isResidential ? n.hResidential : n.hCommercial
     // kT = 1.0 baseline (as if the role is filled by a Специалист); recomputed once team is known.
-    let hours = baseVal * hPerUnit * kC * 1.0
-    if (n.role === 'Визуализатор' && n.base !== 'Нет') {
-      hours *= getFacadeK(object.facadeComplexity) * getSurroundingsK(object.surroundings)
-    }
-    result[n.role] = (result[n.role] || 0) + hours
+    result[n.role] = (result[n.role] || 0) + baseVal * hPerUnit * kC * 1.0
   }
   return result
 }

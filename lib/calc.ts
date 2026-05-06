@@ -17,7 +17,7 @@ export const DEFAULT_SERVICES = ['ДПИ', 'ЭАП', 'АЛР', 'Авторски
 export const OBJECT_TYPES = ['Жилой', 'Коммерческий']
 export const COMPLEXITY_TYPES = ['Стандартный', 'Средней сложности', 'Сложный']
 export const EMPLOYEE_TYPES = ['Ведущий специалист', 'Специалист', 'Младший специалист']
-export const BASES = ['Нет', 'Площадь объекта', 'Кол-во комнат основные', 'Кол-во комнат вспомагательные', 'Кол-во комнат технические', 'Кол-во позиций ИИИ']
+export const BASES = ['Нет', 'Площадь объекта', 'Кол-во комнат основные', 'Кол-во комнат вспомагательные', 'Кол-во комнат технические', 'Кол-во позиций ИИИ', 'Сложность фасадов', 'Окружение']
 export const FACADE_COMPLEXITY_TYPES = ['Не выбрано', 'Легкий', 'Стандартный', 'Сложный']
 export const SURROUNDINGS_TYPES = ['Не выбрано', 'Город', 'Загород населённый', 'Загород ненаселённый']
 
@@ -116,15 +116,13 @@ export function calcStageHours(
     else if (n.base === 'Кол-во комнат вспомагательные') baseVal = object.roomsAux || 0
     else if (n.base === 'Кол-во комнат технические') baseVal = object.roomsTech || 0
     else if (n.base === 'Кол-во позиций ИИИ') baseVal = object.roomsIii || 0
+    else if (n.base === 'Сложность фасадов') baseVal = getFacadeK(object.facadeComplexity)
+    else if (n.base === 'Окружение') baseVal = getSurroundingsK(object.surroundings)
 
     const hPerUnit = isResidential ? n.hResidential : n.hCommercial
     const emp = employees.find(e => e.id === teamEntry.employeeId)
     const kT = emp ? getTypeK(emp.type, settings) : 1.0
-    let hours = baseVal * hPerUnit * kC * kT
-    if (n.role === 'Визуализатор' && n.base !== 'Нет') {
-      hours *= getFacadeK(object.facadeComplexity) * getSurroundingsK(object.surroundings)
-    }
-    result[role] = (result[role] || 0) + hours
+    result[role] = (result[role] || 0) + baseVal * hPerUnit * kC * kT
   }
 
   return result
