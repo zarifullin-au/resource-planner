@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { fetchJson, showError } from '@/lib/api'
-import type { ProjectObject, Employee, Contract, Norm, AppSettings } from '@/types'
+import type { ProjectObject, Employee, Contract, Norm, AppSettings, ServiceRecord, StageRecord } from '@/types'
 
 export interface AppData {
   objects: ProjectObject[]
@@ -9,6 +9,8 @@ export interface AppData {
   contracts: Contract[]
   norms: Norm[]
   settings: AppSettings
+  services: ServiceRecord[]
+  stages: StageRecord[]
   loading: boolean
   error: string | null
   refresh: () => void
@@ -27,6 +29,8 @@ export function useAppData(): AppData {
   const [contracts, setContracts] = useState<Contract[]>([])
   const [norms, setNorms] = useState<Norm[]>([])
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
+  const [services, setServices] = useState<ServiceRecord[]>([])
+  const [stages, setStages] = useState<StageRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tick, setTick] = useState(0)
@@ -44,19 +48,23 @@ export function useAppData(): AppData {
       fetchJson<Contract[]>('/api/contracts'),
       fetchJson<Norm[]>('/api/norms'),
       fetchJson<Partial<AppSettings>>('/api/settings'),
+      fetchJson<ServiceRecord[]>('/api/services'),
+      fetchJson<StageRecord[]>('/api/stages'),
     ]).then(results => {
       if (cancelled) return
 
-      const [objsR, empsR, consR, normsR, settR] = results
+      const [objsR, empsR, consR, normsR, settR, svcR, stgR] = results
       if (objsR.status === 'fulfilled') setObjects(objsR.value)
       if (empsR.status === 'fulfilled') setEmployees(empsR.value)
       if (consR.status === 'fulfilled') setContracts(consR.value)
       if (normsR.status === 'fulfilled') setNorms(normsR.value)
       if (settR.status === 'fulfilled') setSettings({ ...DEFAULT_SETTINGS, ...settR.value })
+      if (svcR.status === 'fulfilled') setServices(svcR.value)
+      if (stgR.status === 'fulfilled') setStages(stgR.value)
 
       const failed = results
         .map((r, i) => r.status === 'rejected'
-          ? `${['объекты', 'сотрудники', 'договоры', 'нормативы', 'настройки'][i]}: ${(r.reason as Error).message}`
+          ? `${['объекты', 'сотрудники', 'договоры', 'нормативы', 'настройки', 'виды услуг', 'этапы'][i]}: ${(r.reason as Error).message}`
           : null)
         .filter(Boolean)
 
@@ -71,5 +79,5 @@ export function useAppData(): AppData {
     return () => { cancelled = true }
   }, [tick])
 
-  return { objects, employees, contracts, norms, settings, loading, error, refresh }
+  return { objects, employees, contracts, norms, settings, services, stages, loading, error, refresh }
 }

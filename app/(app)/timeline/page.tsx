@@ -38,7 +38,7 @@ interface SelectedStage {
 }
 
 export default function TimelinePage() {
-  const { objects, employees, contracts, norms, settings, loading } = useAppData()
+  const { objects, employees, contracts, norms, settings, services, stages: appStages, loading } = useAppData()
   const [offset, setOffset] = useState(0)
   const [selected, setSelected] = useState<SelectedStage | null>(null)
   const [draft, setDraft] = useState<SlotDraftPreview | null>(null)
@@ -239,6 +239,8 @@ export default function TimelinePage() {
         contracts={contracts}
         norms={norms}
         settings={settings}
+        services={services}
+        stages={appStages}
         months={months}
         effectiveLoad={load}
         onDraftChange={handleDraftChange}

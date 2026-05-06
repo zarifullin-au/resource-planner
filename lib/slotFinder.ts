@@ -2,13 +2,14 @@ import type {
   AppSettings, Contract, Employee, Norm, ProjectObject, ServiceType,
 } from '@/types'
 import {
-  STAGES, ROLES, getComplexityK, getTypeK, addWorkingDays, countWorkingDays, calcLoad,
+  ROLES, getComplexityK, getTypeK, addWorkingDays, countWorkingDays, calcLoad,
 } from '@/lib/calc'
 import { buildHolidaySet } from '@/lib/holidays'
 
 export interface SlotInput {
   service: ServiceType
   object: ProjectObject
+  stages: string[]
   stageDays: number[]
   desiredStart: Date
   contracts: Contract[]
@@ -115,16 +116,17 @@ function distributeHoursAcrossMonths(
 
 function buildScheduleStages(
   startDate: Date,
+  stages: string[],
   stageDays: number[],
   holidays: Set<string>,
 ): SlotStage[] {
   const out: SlotStage[] = []
   let cursor = new Date(startDate)
-  for (let i = 0; i < STAGES.length; i++) {
+  for (let i = 0; i < stages.length; i++) {
     const days = stageDays[i] || 20
     const start = new Date(cursor)
     const end = addWorkingDays(start, days, holidays)
-    out.push({ stage: STAGES[i], start, end, days })
+    out.push({ stage: stages[i], start, end, days })
     cursor = addWorkingDays(end, 1, holidays)
   }
   return out
@@ -277,7 +279,7 @@ export function findSlots(input: SlotInput): SlotResult {
   const toYear = start0.getFullYear() + 2
   const holidays = buildHolidaySet(fromYear, toYear, input.settings.customHolidays ?? [])
 
-  const reqByStageRole = STAGES.map((stageName) =>
+  const reqByStageRole = input.stages.map((stageName) =>
     getRoleHoursForStage(input.service, stageName, input.object, input.norms, input.settings),
   )
   const allRoles = new Set<string>()
@@ -307,7 +309,7 @@ export function findSlots(input: SlotInput): SlotResult {
   for (let dayOffset = 0; dayOffset <= MAX_HORIZON_DAYS; dayOffset += STEP_DAYS) {
     const candidateStartRaw = new Date(start0.getTime() + dayOffset * ONE_DAY)
     const candidateStart = findFirstWorkingDay(candidateStartRaw, holidays)
-    const stages = buildScheduleStages(candidateStart, input.stageDays, holidays)
+    const stages = buildScheduleStages(candidateStart, input.stages, input.stageDays, holidays)
     const endDate = stages[stages.length - 1].end
 
     // Try to find primary, then 2 alternatives with different teams or different start dates.

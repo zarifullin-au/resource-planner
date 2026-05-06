@@ -2,23 +2,23 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAppData } from '@/lib/useAppData'
 import { Modal, Confirm, PageHeader, FormGroup, Tag } from '@/components/ui'
-import { ROLES, SERVICES, STAGES, calcStageHours, ROLE_COLORS } from '@/lib/calc'
+import { ROLES, calcStageHours, ROLE_COLORS } from '@/lib/calc'
 import { fetchJson, showError, confirmDuplicateName } from '@/lib/api'
-import type { Contract, ContractStage } from '@/types'
+import type { Contract, ContractStage, StageRecord, ServiceRecord } from '@/types'
 import type { ContractDraftPayload } from '@/lib/slotFinder'
 
-function emptyContract() {
+function emptyContract(stages: StageRecord[], services: ServiceRecord[]) {
   const today = new Date().toISOString().slice(0, 10)
   return {
-    name: '', objectId: '', service: 'ДПИ' as string, status: 'active',
+    name: '', objectId: '', service: services[0]?.name || 'ДПИ', status: 'active',
     team: {} as Record<string, string>,
-    stages: STAGES.map(stage => ({ stage, startDate: today, days: 20 })),
+    stages: stages.map(s => ({ stage: s.name, startDate: today, days: 20 })),
   }
 }
 
 export default function ContractsPage() {
-  const { objects, employees, contracts, norms, settings, refresh, loading } = useAppData()
-  const [form, setForm] = useState<ReturnType<typeof emptyContract>>(emptyContract())
+  const { objects, employees, contracts, norms, settings, services, stages, refresh, loading } = useAppData()
+  const [form, setForm] = useState<ReturnType<typeof emptyContract>>(() => emptyContract([], []))
   const [editId, setEditId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -48,10 +48,10 @@ export default function ContractsPage() {
         service: draft.service,
         status: 'active',
         team: Object.fromEntries(draft.team.map(t => [t.role, t.employeeId])),
-        stages: STAGES.map(stageName => {
-          const found = draft.stages.find(s => s.stage === stageName)
+        stages: stages.map(s => {
+          const found = draft.stages.find(d => d.stage === s.name)
           return {
-            stage: stageName,
+            stage: s.name,
             startDate: found?.startDate ?? new Date().toISOString().slice(0, 10),
             days: found?.days ?? 20,
           }
@@ -78,11 +78,11 @@ export default function ContractsPage() {
           if (objects[0]) applyDraft(objects[0].id)
         })
     }
-  }, [loading, objects, refresh])
+  }, [loading, objects, refresh, stages])
 
   function openAdd() {
     if (!objects.length) { alert('Сначала добавьте объект'); return }
-    setForm({ ...emptyContract(), objectId: objects[0].id })
+    setForm({ ...emptyContract(stages, services), objectId: objects[0].id })
     setEditId(null); setModalOpen(true)
   }
 
@@ -90,9 +90,9 @@ export default function ContractsPage() {
     setForm({
       name: c.name, objectId: c.objectId, service: c.service, status: c.status,
       team: Object.fromEntries(c.team.map(t => [t.role, t.employeeId])),
-      stages: STAGES.map(s => {
-        const found = c.stages.find(st => st.stage === s)
-        return { stage: s, startDate: found?.startDate ? found.startDate.slice(0, 10) : '', days: found?.days ?? 20 }
+      stages: stages.map(s => {
+        const found = c.stages.find(st => st.stage === s.name)
+        return { stage: s.name, startDate: found?.startDate ? found.startDate.slice(0, 10) : '', days: found?.days ?? 20 }
       }),
     })
     setEditId(c.id); setModalOpen(true)
@@ -176,14 +176,14 @@ export default function ContractsPage() {
               <div className="text-[10px] uppercase tracking-widest mb-1.5" style={{ color: 'var(--text3)' }}>
                 Сроки этапов (начало / рабочих дней)
               </div>
-              {STAGES.map((stageName, si) => {
-                const stg = c.stages.find(s => s.stage === stageName)
+              {stages.map((stg, si) => {
+                const cs = c.stages.find(s => s.stage === stg.name)
                 return (
                   <StageRow
-                    key={stageName}
-                    stageName={stageName}
-                    stage={stg}
-                    onPatch={patch => stg && patchStage(stg.id, patch)}
+                    key={stg.id}
+                    stageName={stg.name}
+                    stage={cs}
+                    onPatch={patch => cs && patchStage(cs.id, patch)}
                     onShowHours={() => setHoursId({ contractId: c.id, stageIdx: si })}
                   />
                 )
@@ -211,7 +211,7 @@ export default function ContractsPage() {
             </FormGroup>
             <FormGroup label="Вид услуги">
               <select className="form-input" value={form.service} onChange={e => setForm(p => ({ ...p, service: e.target.value }))}>
-                {SERVICES.map(s => <option key={s}>{s}</option>)}
+                {services.map(s => <option key={s.id}>{s.name}</option>)}
               </select>
             </FormGroup>
           </div>
@@ -252,10 +252,11 @@ export default function ContractsPage() {
         const c = contracts.find(c => c.id === hoursId.contractId)
         const obj = objects.find(o => o.id === c?.objectId)
         if (!c || !obj) return null
-        const hours = calcStageHours(c, hoursId.stageIdx, obj, employees, norms, settings)
+        const stageName = stages[hoursId.stageIdx]?.name ?? ''
+        const hours = calcStageHours(c, stageName, obj, employees, norms, settings)
         const total = Object.values(hours).reduce((a, b) => a + b, 0)
         return (
-          <Modal open title={`Трудоёмкость: ${c.name} / ${STAGES[hoursId.stageIdx]}`} onClose={() => setHoursId(null)}>
+          <Modal open title={`Трудоёмкость: ${c.name} / ${stageName}`} onClose={() => setHoursId(null)}>
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>{['Роль', 'Сотрудник', 'Часов', 'Дней'].map(h => (

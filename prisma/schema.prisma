@@ -101,3 +101,16 @@ model Norm {
   hCommercial  Float  @default(0)
   order       Int     @default(0)
 }
+
+model Service {
+  id    String @id @default(cuid())
+  name  String @unique
+  color String @default("#1A6BFF")
+  order Int    @default(0)
+}
+
+model Stage {
+  id    String @id @default(cuid())
+  name  String @unique
+  order Int    @default(0)
+}

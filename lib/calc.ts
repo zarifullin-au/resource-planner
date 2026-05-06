@@ -11,8 +11,9 @@ export const ROLE_COLORS: Record<string, string> = {
 }
 
 export const ROLES = ['Тимлид', 'Дизайнер', 'Визуализатор', 'Проектировщик', 'Архитектор', 'Комплектатор']
-export const STAGES = ['Этап 1', 'Этап 2', 'Этап 3', 'Этап 4']
-export const SERVICES = ['ДПИ', 'ЭАП', 'АЛР', 'Авторский надзор']
+// Default fallback values used by seed scripts only — runtime UI/calc reads from DB via useAppData.
+export const DEFAULT_STAGES = ['Этап 1', 'Этап 2', 'Этап 3', 'Этап 4']
+export const DEFAULT_SERVICES = ['ДПИ', 'ЭАП', 'АЛР', 'Авторский надзор']
 export const OBJECT_TYPES = ['Жилой', 'Коммерческий']
 export const COMPLEXITY_TYPES = ['Стандартный', 'Средней сложности', 'Сложный']
 export const EMPLOYEE_TYPES = ['Ведущий специалист', 'Специалист', 'Младший специалист']
@@ -76,13 +77,13 @@ export function getMonths(n = 12, offset = 0): MonthData[] {
 
 export function calcStageHours(
   contract: Contract,
-  stageIdx: number,
+  stageName: string,
   object: ProjectObject,
   employees: Employee[],
   norms: Norm[],
   settings: AppSettings
 ): Record<string, number> {
-  const stage = STAGES[stageIdx]
+  const stage = stageName
   const service = contract.service
   const isResidential = object.type === 'Жилой'
   const kC = getComplexityK(object.complexity, settings)
@@ -146,7 +147,7 @@ export function calcLoad(
       const stageInfo = contract.stages[si]
       if (!stageInfo?.startDate) continue
 
-      const stageHours = calcStageHours(contract, si, object, employees, norms, settings)
+      const stageHours = calcStageHours(contract, stageInfo.stage, object, employees, norms, settings)
       const start = new Date(stageInfo.startDate)
       const end = addWorkingDays(start, stageInfo.days || 20, holidays)
 

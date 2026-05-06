@@ -2,25 +2,24 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useAppData } from '@/lib/useAppData'
 import { Modal, Confirm, PageHeader, FormGroup, FilterButtons } from '@/components/ui'
-import { ROLES, SERVICES, STAGES, BASES, ROLE_COLORS } from '@/lib/calc'
+import { ROLES, BASES, ROLE_COLORS } from '@/lib/calc'
 import { fetchJson, showError } from '@/lib/api'
-import type { Norm } from '@/types'
+import type { Norm, ServiceRecord, StageRecord } from '@/types'
 
-const SERVICE_COLORS: Record<string, string> = {
-  'ДПИ': '#1A6BFF', 'ЭАП': '#6366f1', 'АЛР': '#f59e0b', 'Авторский надзор': '#0ea5e9',
-}
-
-const empty = (): Partial<Norm> => ({
-  service: 'ДПИ', stage: 'Этап 1', artifact: '', task: '', role: 'Тимлид', base: 'Нет',
-  hResidential: 0, hCommercial: 0,
-})
+const SERVICE_COLOR_PALETTE = [
+  '#1A6BFF', '#6366f1', '#f59e0b', '#0ea5e9',
+  '#10b981', '#ef4444', '#8b5cf6', '#ec4899',
+]
 
 export default function NormsPage() {
-  const { norms, contracts, refresh, loading } = useAppData()
+  const { norms, contracts, services, stages, refresh, loading } = useAppData()
   const [svcFilter, setSvcFilter] = useState('all')
   const [stageFilter, setStageFilter] = useState('all')
   const [addOpen, setAddOpen] = useState(false)
-  const [form, setForm] = useState<Partial<Norm>>(empty())
+  const [form, setForm] = useState<Partial<Norm>>(() => ({
+    service: 'ДПИ', stage: 'Этап 1', artifact: '', task: '', role: 'Тимлид', base: 'Нет',
+    hResidential: 0, hCommercial: 0,
+  }))
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -28,6 +27,45 @@ export default function NormsPage() {
   const [confirmSaveOpen, setConfirmSaveOpen] = useState(false)
   const [savingAll, setSavingAll] = useState(false)
   const [savedNotice, setSavedNotice] = useState(false)
+
+  // Service / stage management
+  const [addSvcOpen, setAddSvcOpen] = useState(false)
+  const [newSvcName, setNewSvcName] = useState('')
+  const [newSvcColor, setNewSvcColor] = useState(SERVICE_COLOR_PALETTE[0])
+  const [savingNewSvc, setSavingNewSvc] = useState(false)
+
+  const [stagesOpen, setStagesOpen] = useState(false)
+  const [dragStages, setDragStages] = useState<StageRecord[]>([])
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [newStageName, setNewStageName] = useState('')
+  const [savingStages, setSavingStages] = useState(false)
+
+  const serviceColorMap = useMemo(
+    () => Object.fromEntries(services.map(s => [s.name, s.color])),
+    [services],
+  )
+
+  function buildEmptyForm(): Partial<Norm> {
+    return {
+      service: services[0]?.name ?? 'ДПИ',
+      stage: stages[0]?.name ?? 'Этап 1',
+      artifact: '',
+      task: '',
+      role: 'Тимлид',
+      base: 'Нет',
+      hResidential: 0,
+      hCommercial: 0,
+    }
+  }
+
+  // Re-init dragStages when modal opens
+  useEffect(() => {
+    if (stagesOpen) {
+      setDragStages([...stages])
+      setNewStageName('')
+      setDragIdx(null)
+    }
+  }, [stagesOpen, stages])
 
   // Clean dirty entries that no longer exist in norms (e.g. after delete)
   useEffect(() => {
@@ -71,12 +109,72 @@ export default function NormsPage() {
     try {
       await fetchJson('/api/norms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       setAddOpen(false)
-      setForm(empty())
+      setForm(buildEmptyForm())
       refresh()
     } catch (e) {
       showError(e)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleAddService() {
+    const name = newSvcName.trim()
+    if (!name) { showError(new Error('Введите название')); return }
+    setSavingNewSvc(true)
+    try {
+      await fetchJson('/api/services', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color: newSvcColor }),
+      })
+      setAddSvcOpen(false)
+      setNewSvcName('')
+      setNewSvcColor(SERVICE_COLOR_PALETTE[0])
+      refresh()
+    } catch (e) {
+      showError(e)
+    } finally {
+      setSavingNewSvc(false)
+    }
+  }
+
+  function onStageDragStart(idx: number) { setDragIdx(idx) }
+  function onStageDragOver(e: React.DragEvent) { e.preventDefault() }
+  function onStageDrop(toIdx: number) {
+    if (dragIdx === null || dragIdx === toIdx) { setDragIdx(null); return }
+    setDragStages(prev => {
+      const next = [...prev]
+      const [item] = next.splice(dragIdx, 1)
+      next.splice(toIdx, 0, item)
+      return next
+    })
+    setDragIdx(null)
+  }
+
+  async function handleSaveStages() {
+    setSavingStages(true)
+    try {
+      const newName = newStageName.trim()
+      const initialIds = stages.map(s => s.id).join('|')
+      const currentIds = dragStages.map(s => s.id).join('|')
+      if (initialIds !== currentIds && dragStages.length > 0) {
+        await fetchJson('/api/stages/reorder', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: dragStages.map(s => s.id) }),
+        })
+      }
+      if (newName) {
+        await fetchJson('/api/stages', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newName }),
+        })
+      }
+      setStagesOpen(false)
+      refresh()
+    } catch (e) {
+      showError(e)
+    } finally {
+      setSavingStages(false)
     }
   }
 
@@ -145,11 +243,11 @@ export default function NormsPage() {
 
   const svcOptions = [
     { value: 'all', label: 'Все' },
-    ...SERVICES.map(s => ({ value: s, label: s === 'Авторский надзор' ? 'АН' : s, color: SERVICE_COLORS[s] })),
+    ...services.map(s => ({ value: s.name, label: s.name === 'Авторский надзор' ? 'АН' : s.name, color: s.color })),
   ]
   const stageOptions = [
     { value: 'all', label: 'Все' },
-    ...STAGES.map(s => ({ value: s, label: s })),
+    ...stages.map(s => ({ value: s.name, label: s.name })),
   ]
 
   if (loading) return <div className="text-xs py-8 text-center" style={{ color: 'var(--text3)' }}>Загрузка...</div>
@@ -160,8 +258,10 @@ export default function NormsPage() {
         title="Нормативы"
         sub="Нормы часов на задачи — изменения применяются после сохранения"
         right={
-          <div className="flex gap-2">
-            <button className="btn btn-primary btn-sm" onClick={() => { setForm(empty()); setAddOpen(true) }}>+ Добавить задачу</button>
+          <div className="flex gap-2 flex-wrap">
+            <button className="btn btn-sm" onClick={() => setAddSvcOpen(true)}>+ Вид услуги</button>
+            <button className="btn btn-sm" onClick={() => setStagesOpen(true)}>+ Этап</button>
+            <button className="btn btn-primary btn-sm" onClick={() => { setForm(buildEmptyForm()); setAddOpen(true) }}>+ Добавить задачу</button>
             <button
               className="btn btn-primary btn-sm flex items-center gap-1.5"
               disabled={dirtyCount === 0}
@@ -225,7 +325,7 @@ export default function NormsPage() {
                     style={isDirty ? { background: 'rgba(245,168,74,0.06)' } : undefined}
                   >
                     <td className="px-3 py-2">
-                      <span className="tag" style={{ background: `rgba(${SERVICE_COLORS[n.service] ? '74,240,180' : '136,145,168'},0.12)`, color: SERVICE_COLORS[n.service] || '#aaa', border: `1px solid ${SERVICE_COLORS[n.service] || '#aaa'}40` }}>
+                      <span className="tag" style={{ background: `${serviceColorMap[n.service] || '#aaaaaa'}1a`, color: serviceColorMap[n.service] || '#aaa', border: `1px solid ${serviceColorMap[n.service] || '#aaa'}40` }}>
                         {n.service === 'Авторский надзор' ? 'АН' : n.service}
                       </span>
                     </td>
@@ -276,12 +376,12 @@ export default function NormsPage() {
           <div className="grid grid-cols-2 gap-3">
             <FormGroup label="Вид услуги">
               <select className="form-input" value={form.service} onChange={e => setForm(p => ({ ...p, service: e.target.value }))}>
-                {SERVICES.map(s => <option key={s}>{s}</option>)}
+                {services.map(s => <option key={s.id}>{s.name}</option>)}
               </select>
             </FormGroup>
             <FormGroup label="Этап">
               <select className="form-input" value={form.stage} onChange={e => setForm(p => ({ ...p, stage: e.target.value }))}>
-                {STAGES.map(s => <option key={s}>{s}</option>)}
+                {stages.map(s => <option key={s.id}>{s.name}</option>)}
               </select>
             </FormGroup>
           </div>
@@ -330,6 +430,106 @@ export default function NormsPage() {
         <div className="rounded-lg p-3.5 text-xs flex justify-between" style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}>
           <span style={{ color: 'var(--text3)' }}>Будет сохранено нормативов</span>
           <strong style={{ color: 'var(--accent)' }}>{dirtyCount}</strong>
+        </div>
+      </Modal>
+
+      {/* Add service modal */}
+      <Modal
+        open={addSvcOpen}
+        title="Новый вид услуги"
+        onClose={() => setAddSvcOpen(false)}
+        onSave={handleAddService}
+        saveLabel={savingNewSvc ? 'Сохранение...' : 'Добавить'}
+      >
+        <div className="flex flex-col gap-3">
+          <FormGroup label="Название">
+            <input
+              className="form-input"
+              value={newSvcName}
+              autoFocus
+              onChange={e => setNewSvcName(e.target.value)}
+              placeholder="напр. Технадзор"
+            />
+          </FormGroup>
+          <FormGroup label="Цвет">
+            <div className="flex gap-2 flex-wrap">
+              {SERVICE_COLOR_PALETTE.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setNewSvcColor(c)}
+                  className="rounded-full"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    background: c,
+                    border: newSvcColor === c ? '2px solid var(--text)' : '2px solid transparent',
+                    boxShadow: newSvcColor === c ? '0 0 0 2px var(--surface), 0 0 0 4px ' + c : undefined,
+                    cursor: 'pointer',
+                  }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+          </FormGroup>
+          <p className="text-[11px]" style={{ color: 'var(--text3)' }}>
+            После добавления услугу можно использовать в нормативах и договорах.
+          </p>
+        </div>
+      </Modal>
+
+      {/* Manage stages modal: drag-to-reorder + add new */}
+      <Modal
+        open={stagesOpen}
+        title="Этапы"
+        onClose={() => setStagesOpen(false)}
+        onSave={handleSaveStages}
+        saveLabel={savingStages ? 'Сохранение...' : 'Сохранить'}
+      >
+        <div className="flex flex-col gap-3">
+          <div className="text-[10px] tracking-widest uppercase" style={{ color: 'var(--text3)' }}>
+            Порядок (перетащите)
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {dragStages.map((s, i) => (
+              <div
+                key={s.id}
+                draggable
+                onDragStart={() => onStageDragStart(i)}
+                onDragOver={onStageDragOver}
+                onDrop={() => onStageDrop(i)}
+                className="flex items-center gap-2 px-3 py-2 rounded text-xs cursor-move"
+                style={{
+                  background: dragIdx === i ? 'rgba(26,107,255,0.1)' : 'var(--surface2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                }}
+              >
+                <span style={{ color: 'var(--text3)' }}>⠿</span>
+                <span className="text-[10px]" style={{ color: 'var(--text3)', minWidth: 16 }}>{i + 1}.</span>
+                <span>{s.name}</span>
+              </div>
+            ))}
+            {dragStages.length === 0 && (
+              <div className="text-[11px] py-3 text-center" style={{ color: 'var(--text3)' }}>
+                Нет этапов
+              </div>
+            )}
+          </div>
+
+          <div className="pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+            <FormGroup label="Добавить новый этап">
+              <input
+                className="form-input"
+                value={newStageName}
+                onChange={e => setNewStageName(e.target.value)}
+                placeholder="напр. Этап 5"
+              />
+            </FormGroup>
+          </div>
+          <p className="text-[11px]" style={{ color: 'var(--text3)' }}>
+            Изменения сохраняются после нажатия «Сохранить».
+          </p>
         </div>
       </Modal>
 

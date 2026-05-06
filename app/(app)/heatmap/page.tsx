@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react'
 import { useAppData } from '@/lib/useAppData'
 import {
-  calcLoad, getMonths, ROLE_COLORS, STAGES,
+  calcLoad, getMonths, ROLE_COLORS,
   addWorkingDays, countWorkingDays, getComplexityK, getTypeK,
 } from '@/lib/calc'
 import { buildHolidaySet } from '@/lib/holidays'
@@ -373,7 +373,7 @@ function computeEmpMonthDetail(
       const fraction = overlapWD / totalWD
       if (fraction <= 0) continue
 
-      const stageName = STAGES[si] || stageInfo.stage
+      const stageName = stageInfo.stage
       const stageNorms = norms.filter(n => n.service === contract.service && n.stage === stageName && n.role === emp.role)
 
       const lines: NormLine[] = []

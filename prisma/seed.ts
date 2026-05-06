@@ -117,6 +117,25 @@ async function main() {
   })
   console.log('✅ Settings initialized')
 
+  // Seed default services and stages (idempotent)
+  const DEFAULT_SERVICES = [
+    { name: 'ДПИ', color: '#1A6BFF', order: 0 },
+    { name: 'ЭАП', color: '#6366f1', order: 1 },
+    { name: 'АЛР', color: '#f59e0b', order: 2 },
+    { name: 'Авторский надзор', color: '#0ea5e9', order: 3 },
+  ]
+  const DEFAULT_STAGES = [
+    { name: 'Этап 1', order: 0 }, { name: 'Этап 2', order: 1 },
+    { name: 'Этап 3', order: 2 }, { name: 'Этап 4', order: 3 },
+  ]
+  for (const s of DEFAULT_SERVICES) {
+    await prisma.service.upsert({ where: { name: s.name }, update: {}, create: s })
+  }
+  for (const s of DEFAULT_STAGES) {
+    await prisma.stage.upsert({ where: { name: s.name }, update: {}, create: s })
+  }
+  console.log('✅ Default services and stages seeded')
+
   // Seed norms
   await prisma.norm.deleteMany()
   await prisma.norm.createMany({ data: DEFAULT_NORMS })

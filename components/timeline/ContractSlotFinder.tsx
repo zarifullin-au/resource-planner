@@ -3,14 +3,14 @@ import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FormGroup } from '@/components/ui'
 import {
-  ROLES, SERVICES, STAGES, OBJECT_TYPES, COMPLEXITY_TYPES, ROLE_COLORS,
+  OBJECT_TYPES, COMPLEXITY_TYPES, ROLE_COLORS,
 } from '@/lib/calc'
 import {
   findSlots, buildDraftContract, isoDate,
-  type SlotResult, type SlotCandidate, type ContractDraftPayload,
+  type SlotResult, type ContractDraftPayload,
 } from '@/lib/slotFinder'
 import type {
-  AppSettings, Contract, Employee, LoadResult, MonthData, Norm, ProjectObject, ServiceType,
+  AppSettings, Contract, Employee, LoadResult, MonthData, Norm, ProjectObject, ServiceType, ServiceRecord, StageRecord,
 } from '@/types'
 
 export interface SlotDraftPreview {
@@ -25,6 +25,8 @@ interface Props {
   contracts: Contract[]
   norms: Norm[]
   settings: AppSettings
+  services: ServiceRecord[]
+  stages: StageRecord[]
   months: MonthData[]
   effectiveLoad: LoadResult
   onDraftChange: (d: SlotDraftPreview | null) => void
@@ -42,20 +44,32 @@ const EMPTY_OBJECT_DRAFT = {
 }
 
 export function ContractSlotFinder({
-  objects, employees, contracts, norms, settings, months, effectiveLoad, onDraftChange,
+  objects, employees, contracts, norms, settings, services, stages, months, effectiveLoad, onDraftChange,
 }: Props) {
   const router = useRouter()
 
-  const [service, setService] = useState<ServiceType>('ДПИ')
+  const [service, setService] = useState<ServiceType>(services[0]?.name || 'ДПИ')
   const [useExisting, setUseExisting] = useState(false)
   const [objectId, setObjectId] = useState(objects[0]?.id ?? '')
   const [objectDraft, setObjectDraft] = useState({ ...EMPTY_OBJECT_DRAFT })
-  const [stageDays, setStageDays] = useState<number[]>(STAGES.map(() => 20))
+  const [stageDays, setStageDays] = useState<number[]>([])
   const [desiredStart, setDesiredStart] = useState(isoDate(new Date()))
   const [contractName, setContractName] = useState('')
   const [result, setResult] = useState<SlotResult | null>(null)
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+
+  // Sync stageDays length with the dynamic stages list (preserve user-edited values where possible).
+  useEffect(() => {
+    setStageDays(prev => stages.map((_, i) => prev[i] ?? 20))
+  }, [stages])
+
+  // Initialize service when services load (in case the default literal didn't match).
+  useEffect(() => {
+    if (services.length > 0 && !services.some(s => s.name === service)) {
+      setService(services[0].name)
+    }
+  }, [services, service])
 
   useEffect(() => {
     if (useExisting && !objectId && objects[0]) setObjectId(objects[0].id)
@@ -92,6 +106,7 @@ export function ContractSlotFinder({
     const r = findSlots({
       service,
       object: formObject,
+      stages: stages.map(s => s.name),
       stageDays,
       desiredStart: new Date(desiredStart),
       contracts,
@@ -155,7 +170,7 @@ export function ContractSlotFinder({
               value={service}
               onChange={e => setService(e.target.value as ServiceType)}
             >
-              {SERVICES.map(s => <option key={s}>{s}</option>)}
+              {services.map(s => <option key={s.id}>{s.name}</option>)}
             </select>
           </FormGroup>
 
@@ -238,18 +253,22 @@ export function ContractSlotFinder({
 
           <div className="flex flex-col gap-2">
             <label className="form-label">Длительность этапов (раб. дней)</label>
-            {STAGES.map((stage, i) => (
-              <div key={stage} className="flex items-center gap-2">
-                <span className="text-[11px] w-14" style={{ color: 'var(--text2)' }}>{stage}</span>
+            {stages.map((stage, i) => (
+              <div key={stage.id} className="flex items-center gap-2">
+                <span className="text-[11px] w-14" style={{ color: 'var(--text2)' }}>{stage.name}</span>
                 <input
                   type="number"
                   min={1}
                   className="form-input text-[11px] py-1"
                   style={{ width: 80 }}
-                  value={stageDays[i]}
+                  value={stageDays[i] ?? 20}
                   onChange={e => {
                     const v = parseInt(e.target.value) || 1
-                    setStageDays(p => p.map((d, idx) => idx === i ? v : d))
+                    setStageDays(p => {
+                      const next = stages.map((_, idx) => p[idx] ?? 20)
+                      next[i] = v
+                      return next
+                    })
                   }}
                 />
                 <span className="text-[10px]" style={{ color: 'var(--text3)' }}>раб. дней</span>

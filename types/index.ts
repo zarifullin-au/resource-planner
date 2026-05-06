@@ -2,9 +2,22 @@ export type ObjectType = 'Жилой' | 'Коммерческий'
 export type Complexity = 'Стандартный' | 'Средней сложности' | 'Сложный'
 export type EmployeeRole = 'Тимлид' | 'Дизайнер' | 'Визуализатор' | 'Проектировщик' | 'Архитектор' | 'Комплектатор'
 export type EmployeeType = 'Ведущий специалист' | 'Специалист' | 'Младший специалист'
-export type ServiceType = 'ДПИ' | 'ЭАП' | 'АЛР' | 'Авторский надзор'
-export type StageType = 'Этап 1' | 'Этап 2' | 'Этап 3' | 'Этап 4'
+export type ServiceType = string
+export type StageType = string
 export type ContractStatus = 'active' | 'done'
+
+export interface ServiceRecord {
+  id: string
+  name: string
+  color: string
+  order: number
+}
+
+export interface StageRecord {
+  id: string
+  name: string
+  order: number
+}
 
 export interface ProjectObject {
   id: string
