@@ -5,12 +5,12 @@ echo "🔄 Обновление Resource Planner..."
 
 git pull
 
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # Применить схему БД (безопасно — не затирает данные, создаёт недостающие таблицы)
-docker-compose -f docker-compose.prod.yml exec app npx prisma db push --skip-generate
+docker compose -f docker-compose.prod.yml exec app npx prisma db push --skip-generate
 
 # Заполнить дефолтные виды услуг и этапы (идемпотентно — uses upsert)
-docker-compose -f docker-compose.prod.yml exec app npm run db:bootstrap
+docker compose -f docker-compose.prod.yml exec app npm run db:bootstrap
 
 echo "✅ Обновлено!"
