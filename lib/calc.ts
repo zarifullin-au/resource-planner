@@ -18,8 +18,8 @@ export const OBJECT_TYPES = ['Жилой', 'Коммерческий']
 export const COMPLEXITY_TYPES = ['Стандартный', 'Средней сложности', 'Сложный']
 export const EMPLOYEE_TYPES = ['Ведущий специалист', 'Специалист', 'Младший специалист']
 export const BASES = ['Нет', 'Площадь объекта', 'Кол-во комнат основные', 'Кол-во комнат вспомагательные', 'Кол-во комнат технические', 'Кол-во позиций ИИИ']
-export const FACADE_COMPLEXITY_TYPES = ['Легкий', 'Стандартный', 'Сложный']
-export const SURROUNDINGS_TYPES = ['Город', 'Загород населённый', 'Загород ненаселённый']
+export const FACADE_COMPLEXITY_TYPES = ['Не выбрано', 'Легкий', 'Стандартный', 'Сложный']
+export const SURROUNDINGS_TYPES = ['Не выбрано', 'Город', 'Загород населённый', 'Загород ненаселённый']
 
 export function getComplexityK(complexity: string, settings: AppSettings): number {
   if (complexity === 'Средней сложности') return settings.kMedium
@@ -36,13 +36,13 @@ export function getTypeK(type: string, settings: AppSettings): number {
 export function getFacadeK(v: string): number {
   if (v === 'Стандартный') return 2
   if (v === 'Сложный') return 4
-  return 1
+  return 1 // 'Легкий' | 'Не выбрано' | unknown → no multiplier
 }
 
 export function getSurroundingsK(v: string): number {
   if (v === 'Город') return 4
   if (v === 'Загород населённый') return 2
-  return 1
+  return 1 // 'Загород ненаселённый' | 'Не выбрано' | unknown → no multiplier
 }
 
 function isWorkingDay(d: Date, holidays?: Set<string>): boolean {

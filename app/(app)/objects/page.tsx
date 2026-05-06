@@ -8,7 +8,7 @@ import type { ProjectObject } from '@/types'
 
 const empty = (): Partial<ProjectObject> => ({
   code: '', name: '', type: 'Жилой', complexity: 'Стандартный',
-  facadeComplexity: 'Легкий', surroundings: 'Загород ненаселённый',
+  facadeComplexity: 'Не выбрано', surroundings: 'Не выбрано',
   area: 0, roomsMain: 0, roomsAux: 0, roomsTech: 0, roomsIii: 0,
 })
 
@@ -124,17 +124,20 @@ export default function ObjectsPage() {
               </select>
             </FormGroup>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <FormGroup label="Сложность фасадов">
-              <select className="form-input" value={form.facadeComplexity || 'Легкий'} onChange={f('facadeComplexity')}>
-                {FACADE_COMPLEXITY_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </FormGroup>
-            <FormGroup label="Окружение">
-              <select className="form-input" value={form.surroundings || 'Загород ненаселённый'} onChange={f('surroundings')}>
-                {SURROUNDINGS_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </FormGroup>
+          <div className="flex flex-col gap-2 rounded-lg p-3" style={{ background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+            <div className="text-[10px] tracking-widest uppercase font-semibold" style={{ color: 'var(--text3)' }}>Для ЭАП</div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormGroup label="Сложность фасадов">
+                <select className="form-input" value={form.facadeComplexity || 'Не выбрано'} onChange={f('facadeComplexity')}>
+                  {FACADE_COMPLEXITY_TYPES.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </FormGroup>
+              <FormGroup label="Окружение">
+                <select className="form-input" value={form.surroundings || 'Не выбрано'} onChange={f('surroundings')}>
+                  {SURROUNDINGS_TYPES.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </FormGroup>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <FormGroup label="Площадь, м²">

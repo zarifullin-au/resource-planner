@@ -1,7 +1,7 @@
 export type ObjectType = 'Жилой' | 'Коммерческий'
 export type Complexity = 'Стандартный' | 'Средней сложности' | 'Сложный'
-export type FacadeComplexity = 'Легкий' | 'Стандартный' | 'Сложный'
-export type Surroundings = 'Город' | 'Загород населённый' | 'Загород ненаселённый'
+export type FacadeComplexity = 'Не выбрано' | 'Легкий' | 'Стандартный' | 'Сложный'
+export type Surroundings = 'Не выбрано' | 'Город' | 'Загород населённый' | 'Загород ненаселённый'
 export type EmployeeRole = 'Тимлид' | 'Дизайнер' | 'Визуализатор' | 'Проектировщик' | 'Архитектор' | 'Комплектатор'
 export type EmployeeType = 'Ведущий специалист' | 'Специалист' | 'Младший специалист'
 export type ServiceType = string

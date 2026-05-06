@@ -38,8 +38,8 @@ model Object {
   name        String
   type        String     // "Жилой" | "Коммерческий"
   complexity  String     // "Стандартный" | "Средней сложности" | "Сложный"
-  facadeComplexity String @default("Легкий")             // "Легкий" | "Стандартный" | "Сложный"
-  surroundings     String @default("Загород ненаселённый") // "Город" | "Загород населённый" | "Загород ненаселённый"
+  facadeComplexity String @default("Не выбрано") // "Не выбрано" | "Легкий" | "Стандартный" | "Сложный"
+  surroundings     String @default("Не выбрано") // "Не выбрано" | "Город" | "Загород населённый" | "Загород ненаселённый"
   area        Float      @default(0)
   roomsMain   Int        @default(0)
   roomsAux    Int        @default(0)
