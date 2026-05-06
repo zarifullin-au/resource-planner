@@ -18,6 +18,8 @@ export const OBJECT_TYPES = ['Жилой', 'Коммерческий']
 export const COMPLEXITY_TYPES = ['Стандартный', 'Средней сложности', 'Сложный']
 export const EMPLOYEE_TYPES = ['Ведущий специалист', 'Специалист', 'Младший специалист']
 export const BASES = ['Нет', 'Площадь объекта', 'Кол-во комнат основные', 'Кол-во комнат вспомагательные', 'Кол-во комнат технические', 'Кол-во позиций ИИИ']
+export const FACADE_COMPLEXITY_TYPES = ['Легкий', 'Стандартный', 'Сложный']
+export const SURROUNDINGS_TYPES = ['Город', 'Загород населённый', 'Загород ненаселённый']
 
 export function getComplexityK(complexity: string, settings: AppSettings): number {
   if (complexity === 'Средней сложности') return settings.kMedium
@@ -29,6 +31,18 @@ export function getTypeK(type: string, settings: AppSettings): number {
   if (type === 'Ведущий специалист') return settings.kSenior
   if (type === 'Младший специалист') return settings.kJunior
   return settings.kMid
+}
+
+export function getFacadeK(v: string): number {
+  if (v === 'Стандартный') return 2
+  if (v === 'Сложный') return 4
+  return 1
+}
+
+export function getSurroundingsK(v: string): number {
+  if (v === 'Город') return 4
+  if (v === 'Загород населённый') return 2
+  return 1
 }
 
 function isWorkingDay(d: Date, holidays?: Set<string>): boolean {
@@ -106,7 +120,10 @@ export function calcStageHours(
     const hPerUnit = isResidential ? n.hResidential : n.hCommercial
     const emp = employees.find(e => e.id === teamEntry.employeeId)
     const kT = emp ? getTypeK(emp.type, settings) : 1.0
-    const hours = baseVal * hPerUnit * kC * kT
+    let hours = baseVal * hPerUnit * kC * kT
+    if (n.role === 'Визуализатор' && n.base !== 'Нет') {
+      hours *= getFacadeK(object.facadeComplexity) * getSurroundingsK(object.surroundings)
+    }
     result[role] = (result[role] || 0) + hours
   }
 

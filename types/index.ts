@@ -1,5 +1,7 @@
 export type ObjectType = 'Жилой' | 'Коммерческий'
 export type Complexity = 'Стандартный' | 'Средней сложности' | 'Сложный'
+export type FacadeComplexity = 'Легкий' | 'Стандартный' | 'Сложный'
+export type Surroundings = 'Город' | 'Загород населённый' | 'Загород ненаселённый'
 export type EmployeeRole = 'Тимлид' | 'Дизайнер' | 'Визуализатор' | 'Проектировщик' | 'Архитектор' | 'Комплектатор'
 export type EmployeeType = 'Ведущий специалист' | 'Специалист' | 'Младший специалист'
 export type ServiceType = string
@@ -25,6 +27,8 @@ export interface ProjectObject {
   name: string
   type: ObjectType
   complexity: Complexity
+  facadeComplexity: FacadeComplexity
+  surroundings: Surroundings
   area: number
   roomsMain: number
   roomsAux: number

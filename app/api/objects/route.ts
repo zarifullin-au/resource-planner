@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
         name,
         type: body.type,
         complexity: body.complexity,
+        facadeComplexity: body.facadeComplexity ?? 'Легкий',
+        surroundings: body.surroundings ?? 'Загород ненаселённый',
         area: num(body.area),
         roomsMain: int(body.roomsMain),
         roomsAux: int(body.roomsAux),

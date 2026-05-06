@@ -2,12 +2,13 @@
 import { useState } from 'react'
 import { useAppData } from '@/lib/useAppData'
 import { Modal, Confirm, PageHeader, FormGroup, Tag } from '@/components/ui'
-import { OBJECT_TYPES, COMPLEXITY_TYPES } from '@/lib/calc'
+import { OBJECT_TYPES, COMPLEXITY_TYPES, FACADE_COMPLEXITY_TYPES, SURROUNDINGS_TYPES } from '@/lib/calc'
 import { fetchJson, showError, confirmDuplicateName } from '@/lib/api'
 import type { ProjectObject } from '@/types'
 
 const empty = (): Partial<ProjectObject> => ({
   code: '', name: '', type: 'Жилой', complexity: 'Стандартный',
+  facadeComplexity: 'Легкий', surroundings: 'Загород ненаселённый',
   area: 0, roomsMain: 0, roomsAux: 0, roomsTech: 0, roomsIii: 0,
 })
 
@@ -120,6 +121,18 @@ export default function ObjectsPage() {
             <FormGroup label="Сложность">
               <select className="form-input" value={form.complexity || 'Стандартный'} onChange={f('complexity')}>
                 {COMPLEXITY_TYPES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </FormGroup>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FormGroup label="Сложность фасадов">
+              <select className="form-input" value={form.facadeComplexity || 'Легкий'} onChange={f('facadeComplexity')}>
+                {FACADE_COMPLEXITY_TYPES.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </FormGroup>
+            <FormGroup label="Окружение">
+              <select className="form-input" value={form.surroundings || 'Загород ненаселённый'} onChange={f('surroundings')}>
+                {SURROUNDINGS_TYPES.map(t => <option key={t}>{t}</option>)}
               </select>
             </FormGroup>
           </div>

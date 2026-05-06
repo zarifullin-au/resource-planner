@@ -2,7 +2,7 @@ import type {
   AppSettings, Contract, Employee, Norm, ProjectObject, ServiceType,
 } from '@/types'
 import {
-  ROLES, getComplexityK, getTypeK, addWorkingDays, countWorkingDays, calcLoad,
+  ROLES, getComplexityK, getTypeK, getFacadeK, getSurroundingsK, addWorkingDays, countWorkingDays, calcLoad,
 } from '@/lib/calc'
 import { buildHolidaySet } from '@/lib/holidays'
 
@@ -84,7 +84,10 @@ function getRoleHoursForStage(
 
     const hPerUnit = isResidential ? n.hResidential : n.hCommercial
     // kT = 1.0 baseline (as if the role is filled by a Специалист); recomputed once team is known.
-    const hours = baseVal * hPerUnit * kC * 1.0
+    let hours = baseVal * hPerUnit * kC * 1.0
+    if (n.role === 'Визуализатор' && n.base !== 'Нет') {
+      hours *= getFacadeK(object.facadeComplexity) * getSurroundingsK(object.surroundings)
+    }
     result[n.role] = (result[n.role] || 0) + hours
   }
   return result
