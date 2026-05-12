@@ -31,3 +31,4 @@ next-env.d.ts
 # Backups
 backups/
 .claude/scheduled_tasks.lock
+.claude/settings.local.json

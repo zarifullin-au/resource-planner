@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL база данных (только для продакшена без облачной БД)
   postgres:
